@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AS Physics Unit 1: Adaptive Exam Prep</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --correct: #2ecc71;
+            --incorrect: #e74c3c;
+            --text: #333;
+            --bg: #f8f9fa;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* --- SIDEBAR NAVIGATION --- */
+        #sidebar {
+            width: 300px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        #sidebar h2 { font-size: 1.2rem; margin: 0 0 20px 0; text-align: center; border-bottom: 1px solid var(--secondary); padding-bottom: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            aspect-ratio: 1/1;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .nav-btn:hover { background: var(--accent); }
+        .nav-btn.active { outline: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .nav-btn.correct { background: var(--correct); }
+        .nav-btn.incorrect { background: var(--incorrect); }
+
+        .sidebar-controls { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+        .side-action { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        #summary-btn { background: #8e44ad; }
+        #restart-btn { background: #e67e22; }
+
+        /* --- MAIN VIEWPORT --- */
+        #viewport {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 800px; }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        h3 { margin-top: 0; color: var(--primary); line-height: 1.4; }
+
+        .options { display: flex; flex-direction: column; gap: 12px; margin: 25px 0; }
+        .opt-btn {
+            padding: 16px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            background: white;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .opt-btn:hover:not([disabled]) { border-color: var(--accent); background: #f0f8ff; }
+        .opt-btn.correct-ans { background: #d4edda; border-color: var(--correct); color: #155724; }
+        .opt-btn.incorrect-ans { background: #f8d7da; border-color: var(--incorrect); color: #721c24; }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            margin-bottom: 20px;
+            border-left: 5px solid;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #e8f8f0; border-color: var(--correct); }
+        .feedback.incorrect { background: #fdf2f2; border-color: var(--incorrect); }
+
+        .next-container { text-align: right; }
+        #next-btn { 
+            background: var(--accent); color: white; padding: 12px 24px; 
+            border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: none;
+        }
+
+        /* --- SUMMARY VIEW --- */
+        #summary-view { display: none; }
+        .summary-item {
+            background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;
+            border-left: 8px solid #ddd;
+        }
+        .sum-correct { border-left-color: var(--correct); }
+        .sum-incorrect { border-left-color: var(--incorrect); }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 850px) {
+            body { flex-direction: column; }
+            #sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                padding: 15px;
+            }
+            .nav-grid {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            .nav-btn { width: 40px; height: 40px; aspect-ratio: auto; }
+            .sidebar-controls { flex-direction: row; justify-content: center; }
+            .side-action { padding: 8px 15px; font-size: 0.8rem; }
+            #viewport { padding: 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .opt-btn { font-size: 0.9rem; padding: 12px; }
+            h3 { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Question Bank</h2>
+    <div id="nav-list" class="nav-grid"></div>
+    <div class="sidebar-controls">
+        <button id="summary-btn" class="side-action" onclick="toggleSummary()">Review Summary</button>
+        <button id="restart-btn" class="side-action" onclick="initQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<div id="viewport">
+    <div class="container">
+        <div id="quiz-card" class="card">
+            <h3 id="question-text">Initializing...</h3>
+            <div id="options-box" class="options"></div>
+            <div id="feedback-box" class="feedback"></div>
+            <div class="next-container">
+                <button id="next-btn" onclick="navQuestion(1)">Next Question &rarr;</button>
+            </div>
+        </div>
+
+        <div id="summary-view">
+            <h2 style="text-align:center">Quiz Results</h2>
+            <div id="score-display" style="text-align:center; font-size:1.4rem; margin-bottom:20px; font-weight:bold;"></div>
+            <div id="summary-list"></div>
+            <div style="text-align:center"><button class="side-action" style="background:var(--accent)" onclick="toggleSummary()">Return to Quiz</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bank = [
+        { q: "Identify the base SI unit for electric current.", options: ["Volt", "Coulomb", "Ampere", "Ohm"], correct: 2, explain: "The six base SI units are kg, m, s, A, mol, and K [1]." },
+        { q: "State which of the following is a vector quantity.", options: ["Pressure", "Density", "Displacement", "Time"], correct: 2, explain: "Displacement, velocity, acceleration, and force are vectors. Pressure and density are scalars [1, 2]." },
+        { q: "Define the term 'centre of gravity'.", options: ["The point of maximum density", "Geometric center", "Point where the entire weight of the body acts", "Point where mass is zero"], correct: 2, explain: "The centre of gravity is where the entire weight of the body can be considered to act [3, 4]." },
+        { q: "Identify the quark combination of a proton.", options: ["udd", "uud", "uus", "ddd"], correct: 1, explain: "A proton is a baryon with a quark make-up of uud [5, 6]." },
+        { q: "State the group of particles NOT affected by the strong nuclear force.", options: ["Hadrons", "Baryons", "Leptons", "Mesons"], correct: 2, explain: "Strong interactions are felt by quarks (hadrons) but not by leptons [7]." },
+        { q: "Define the spring constant, k.", options: ["Extension per unit force", "Force per unit extension", "Total work done", "Area under the graph"], correct: 1, explain: "Spring constant k is defined as force per unit extension [8, 9]." },
+        { q: "According to Newton’s Third Law, if Body A exerts a force on Body B, then:", options: ["Body B is stationary", "Body B exerts an equal/opposite force on A", "Body A exerts a larger force", "Energy is lost"], correct: 1, explain: "N3 states that if body A exerts a force on B, B exerts an equal and opposite force on A [10, 11]." },
+        { q: "Identify the feature of a force-extension graph that represents work done.", options: ["Gradient", "Y-intercept", "Area under the graph", "Length of line"], correct: 2, explain: "Work done in deforming a solid is equal to the area under the force-extension graph [12, 13]." },
+        { q: "Define a 'black body' in terms of radiation.", options: ["Reflects all light", "Absorbs all incident EM radiation", "Only emits visible light", "Has zero temperature"], correct: 1, explain: "A black body absorbs all electromagnetic radiation that falls upon it [14, 15]." },
+        { q: "State the quark make-up of a meson.", options: ["3 Quarks", "3 Antiquarks", "Quark-antiquark pair", "1 Quark"], correct: 2, explain: "Mesons are hadrons consisting of a quark-antiquark pair [16, 17]." },
+        { q: "Wien’s displacement law states peak wavelength is:", options: ["Proportional to T", "Inversely proportional to T", "Constant", "Equal to luminosity"], correct: 1, explain: "Peak wavelength is inversely proportional to absolute temperature (Wien's Law) [18]." },
+        { q: "Identify which interaction exclusive features neutrino involvement.", options: ["Strong", "Electromagnetic", "Weak", "Gravitational"], correct: 2, explain: "Neutrino involvement and quark flavour changes are exclusive to weak interactions [19, 20]." },
+        { q: "State the base SI unit for temperature.", options: ["Celsius", "Fahrenheit", "Kelvin", "Joule"], correct: 2, explain: "The SI base unit for temperature is the Kelvin (K) [1]." },
+        { q: "Calculate the momentum of a 20kg object moving at 5m/s.", options: ["100 kg m/s", "4 kg m/s", "0.25 kg m/s", "25 kg m/s"], correct: 0, explain: "Momentum p = mass x velocity. 20 x 5 = 100 kg m/s [21]." },
+        { q: "Identify the unit for the Stefan constant.", options: ["W m^-2", "W m^-2 K^-4", "J s^-1", "N m^-2"], correct: 1, explain: "The Stefan constant (sigma) has the unit W m^-2 K^-4 [22]." },
+        { q: "The gradient of a stress-strain curve represents:", options: ["Spring constant", "Work done", "Young modulus", "Breaking point"], correct: 2, explain: "The gradient of the linear portion of a stress-strain curve is the Young modulus [23, 24]." },
+        { q: "State what is meant by a 'ductile' material.", options: ["Snaps easily", "Can be drawn into wires", "Elastic only", "No plastic region"], correct: 1, explain: "Ductile materials can be easily deformed plastically or drawn into wires [25, 26]." },
+        { q: "Identify the name for energy loss in the rubber loading/unloading cycle.", options: ["Plasticity", "Creep", "Hysteresis", "Ductility"], correct: 2, explain: "Hysteresis is the difference between energy stored and energy recovered in rubber [27, 28]." },
+        { q: "In the absence of air resistance, the horizontal velocity of a projectile:", options: ["Increases", "Decreases", "Remains constant", "Becomes zero"], correct: 2, explain: "Horizontal velocity is constant if there are no horizontal forces acting [29, 30]." },
+        { q: "Identify the quark composition of a neutron.", options: ["uud", "udd", "uds", "ddd"], correct: 1, explain: "A neutron is a baryon with the quark make-up udd [5, 31]." },
+        { q: "State the condition for terminal velocity.", options: ["Weight > Drag", "Drag > Weight", "Resultant force is zero", "Object stops"], correct: 2, explain: "At terminal velocity, forces are balanced, so the resultant force is zero [32, 33]." },
+        { q: "Identify the symbol for an electron neutrino.", options: ["e-", "ve", "v", "y"], correct: 1, explain: "The electron neutrino is represented by the symbol ve [34]." },
+        { q: "The gradient of a displacement-time graph is:", options: ["Acceleration", "Speed", "Velocity", "Distance"], correct: 2, explain: "The gradient of a displacement-time graph gives the velocity [35]." },
+        { q: "State the principle of conservation of energy.", options: ["Energy is lost", "Total energy is constant", "KE = PE", "Efficiency is 100%"], correct: 1, explain: "Energy cannot be created or destroyed, only transferred [36]." },
+        { q: "Identify the force responsible for holding quarks together.", options: ["Weak", "EM", "Strong", "Gravity"], correct: 2, explain: "The strong nuclear force acts between quarks and hadrons [7]." },
+        { q: "Calculate work done if F=10N and distance=5m (same direction).", options: ["50 J", "2 J", "0.5 J", "15 J"], correct: 0, explain: "Work = Force x Distance. 10 x 5 = 50 J [37]." },
+        { q: "Identify a 'crystalline' solid.", options: ["Rubber", "Glass", "Metal", "Ceramic"], correct: 2, explain: "Metals are crystalline with long-range regular atomic arrangements [38, 39]." },
+        { q: "Identify an 'amorphous' solid.", options: ["Copper", "Steel", "Glass", "Polythene"], correct: 2, explain: "Amorphous solids like glass have short-range order only [38, 39]." },
+        { q: "Identify the antiparticle of the electron.", options: ["Proton", "Neutron", "Positron", "Antineutrino"], correct: 2, explain: "The positron (e+) is the antiparticle of the electron [34, 40]." },
+        { q: "State the unit for efficiency.", options: ["Joules", "Watts", "No unit / Percentage", "Newtons"], correct: 2, explain: "Efficiency is a ratio of energies and has no unit, often expressed as % [8]." },
+        { q: "Identify the range of the weak nuclear force.", options: ["Infinite", "Short", "Very Short", "Long"], correct: 2, explain: "Weak interactions have a very short range [31]." },
+        { q: "State what happens during annihilation.", options: ["Particles stop", "Mass converted to photons", "Charge increases", "Quarks double"], correct: 1, explain: "A particle and its antiparticle annihilate, converting mass into energy (photons) [34]." },
+        { q: "Identify the force involved in Beta-minus decay.", options: ["Strong", "Gravity", "Weak", "EM"], correct: 2, explain: "Decay involving neutrinos and flavor change is a weak interaction [41, 42]." },
+        { q: "State the property of an elastic collision.", options: ["Momentum lost", "KE conserved", "PE is zero", "Objects stick"], correct: 1, explain: "Elastic collisions involve no loss of kinetic energy [21]." },
+        { q: "Identify the unit of momentum.", options: ["kg m s", "kg m s^-1", "N m", "W s"], correct: 1, explain: "Momentum is mass(kg) x velocity(m/s), giving kg m s^-1 [21]." },
+        { q: "Define tensile stress.", options: ["Force x Area", "Force / Area", "Extension / Length", "Work / Vol"], correct: 1, explain: "Stress is defined as force per unit cross-sectional area [23, 43]." },
+        { q: "Define tensile strain.", options: ["Force / Area", "Extension / Original Length", "Stress / E", "Area / Force"], correct: 1, explain: "Strain is the ratio of extension to original length [23, 44]." },
+        { q: "A body is in equilibrium if:", options: ["Forces are equal", "Moments are equal", "Resultant force/moment are zero", "It is at rest"], correct: 2, explain: "Equilibrium requires zero net force AND zero net moment [3, 45]." },
+        { q: "Identify the 'limit of proportionality'.", options: ["Breaking point", "End of Hooke's Law region", "Start of plastic region", "Maximum stress"], correct: 1, explain: "The point where stress and strain are no longer proportional [46, 47]." },
+        { q: "Identify the 'yield point'.", options: ["Start of elasticity", "Large strain for little stress", "The breaking point", "Zero extension"], correct: 1, explain: "Yield point is where material undergoes large strain for small stress increase [46, 48]." },
+        { q: "State the area of multiwavelength astronomy.", options: ["Optical only", "Using various EM regions", "Only radio waves", "Measuring mass"], correct: 1, explain: "Studying space using different wavelengths/energies of the EM spectrum [18, 22]." },
+        { q: "Identify which is NOT a base SI unit.", options: ["Mole", "Newton", "Kelvin", "Second"], correct: 1, explain: "Newton is a derived unit (kg m s^-2). Base units are kg, m, s, A, mol, K [1]." },
+        { q: "State the horizontal acceleration of a projectile.", options: ["9.81", "0", "Varies", "9.81 x sin(theta)"], correct: 1, explain: "Without air resistance, horizontal acceleration is zero [49]." },
+        { q: "Identify the particle with uud combination.", options: ["Neutron", "Delta Plus", "Proton", "Pion"], correct: 2, explain: "The proton has a quark make-up of uud [5]." },
+        { q: "State the symbol for a positron.", options: ["p", "e+", "e-", "v"], correct: 1, explain: "A positron is represented as e+ [34, 40]." },
+        { q: "Identify the lepton number of a hadron.", options: ["1", "-1", "0", "3"], correct: 2, explain: "Hadrons are composed of quarks and have a lepton number of 0 [17]." },
+        { q: "Define momentum.", options: ["Mass / Velocity", "Mass x Velocity", "Force x Time", "Work / Time"], correct: 1, explain: "Momentum is the product of mass and velocity [21]." },
+        { q: "Identify which force acts on ALL matter.", options: ["Strong", "Weak", "EM", "Gravity"], correct: 3, explain: "Gravitational force is experienced by all matter [31]." },
+        { q: "Identify the charge of an up quark.", options: ["-1/3", "+1/3", "+2/3", "-2/3"], correct: 2, explain: "Up quarks have a charge of +2/3 e [5, 34]." },
+        { q: "Identify the charge of a down quark.", options: ["-1/3", "+1/3", "+2/3", "-1"], correct: 0, explain: "Down quarks have a charge of -1/3 e [5, 34]." }
+    ];
+
+    let sessionQuestions = [];
+    let currentIdx = 0;
+    let userAnswers = [];
+
+    function initQuiz() {
+        // Shuffle bank and take 20
+        sessionQuestions = [...bank].sort(() => 0.5 - Math.random()).slice(0, 20);
+        userAnswers = new Array(20).fill(null);
+        currentIdx = 0;
+        
+        buildNav();
+        renderQuestion();
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('quiz-card').style.display = 'block';
+    }
+
+    function buildNav() {
+        const nav = document.getElementById('nav-list');
+        nav.innerHTML = '';
+        sessionQuestions.forEach((_, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-btn';
+            btn.id = `nav-${i}`;
+            btn.innerText = i + 1;
+            btn.onclick = () => jumpTo(i);
+            nav.appendChild(btn);
+        });
+    }
+
+    function renderQuestion() {
+        const data = sessionQuestions[currentIdx];
+        document.getElementById('question-text').innerText = `${currentIdx + 1}. ${data.q}`;
+        const optBox = document.getElementById('options-box');
+        optBox.innerHTML = '';
+        
+        const feedback = document.getElementById('feedback-box');
+        feedback.style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+
+        data.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = opt;
+            btn.onclick = () => selectOption(i);
+            
+            if (userAnswers[currentIdx] !== null) {
+                btn.disabled = true;
+                if (i === data.correct) btn.classList.add('correct-ans');
+                if (i === userAnswers[currentIdx] && i !== data.correct) btn.classList.add('incorrect-ans');
+            }
+            optBox.appendChild(btn);
+        });
+
+        if (userAnswers[currentIdx] !== null) showFeedback();
+
+        // Update nav active state
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`nav-${currentIdx}`).classList.add('active');
+    }
+
+    function selectOption(idx) {
+        userAnswers[currentIdx] = idx;
+        const isCorrect = idx === sessionQuestions[currentIdx].correct;
+        const navBtn = document.getElementById(`nav-${currentIdx}`);
+        navBtn.classList.add(isCorrect ? 'correct' : 'incorrect');
+        renderQuestion();
+    }
+
+    function showFeedback() {
+        const data = sessionQuestions[currentIdx];
+        const isCorrect = userAnswers[currentIdx] === data.correct;
+        const fb = document.getElementById('feedback-box');
+        fb.style.display = 'block';
+        fb.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+        fb.innerHTML = `<strong>${isCorrect ? 'Correct!' : 'Incorrect.'}</strong><br>${data.explain}`;
+        
+        if (currentIdx < 19) document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function navQuestion(step) {
+        currentIdx += step;
+        renderQuestion();
+    }
+
+    function jumpTo(idx) {
+        currentIdx = idx;
+        document.getElementById('summary-view').style.display = 'none';
+        document.getElementById('quiz-card').style.display = 'block';
+        renderQuestion();
+    }
+
+    function toggleSummary() {
+        const summary = document.getElementById('summary-view');
+        const card = document.getElementById('quiz-card');
+        
+        if (summary.style.display === 'block') {
+            summary.style.display = 'none';
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+            summary.style.display = 'block';
+            renderSummary();
+        }
+    }
+
+    function renderSummary() {
+        const list = document.getElementById('summary-list');
+        list.innerHTML = '';
+        let score = 0;
+        let completed = 0;
+
+        userAnswers.forEach((ans, i) => {
+            if (ans === null) return;
+            completed++;
+            const data = sessionQuestions[i];
+            const isCorrect = ans === data.correct;
+            if (isCorrect) score++;
+
+            const item = document.createElement('div');
+            item.className = `summary-item ${isCorrect ? 'sum-correct' : 'sum-incorrect'}`;
+            item.innerHTML = `
+                <strong>Q${i+1}: ${data.q}</strong><br>
+                Your Answer: ${data.options[ans]} (${isCorrect ? 'Correct' : 'Incorrect'})<br>
+                <em>Feedback: ${data.explain}</em>
+            `;
+            list.appendChild(item);
+        });
+
+        document.getElementById('score-display').innerText = completed > 0 
+            ? `Final Score: ${score} / ${completed}` 
+            : "No questions completed yet.";
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
