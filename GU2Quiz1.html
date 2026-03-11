@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WJEC Physics Unit 2 Higher Tier Quiz</title>
+    <style>
+        :root {
+            --wjec-blue: #0056b3;
+            --correct-green: #2ecc71;
+            --incorrect-red: #e74c3c;
+            --sidebar-bg: #2c3e50;
+            --main-bg: #f8f9fa;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--main-bg); display: flex; flex-direction: column; min-height: 100vh; }
+
+        #app-container { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar Styling */
+        #sidebar { 
+            width: 300px; background: var(--sidebar-bg); color: white; padding: 20px; 
+            display: flex; flex-direction: column; transition: 0.3s;
+        }
+        #sidebar h2 { font-size: 1.2rem; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #455a64; padding-bottom: 10px; }
+        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .nav-item { 
+            background: #34495e; border: 1px solid #455a64; border-radius: 5px; height: 45px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold;
+        }
+        .nav-item.active { border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .nav-item.correct { background: var(--correct-green); }
+        .nav-item.incorrect { background: var(--incorrect-red); }
+
+        /* Content Area */
+        #content { flex: 1; padding: 30px; overflow-y: auto; display: flex; justify-content: center; }
+        .card { background: white; width: 100%; max-width: 800px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); height: fit-content; }
+        .command-word { font-weight: bold; text-transform: uppercase; color: var(--wjec-blue); }
+        .question-meta { color: #666; font-size: 0.9rem; margin-bottom: 10px; }
+        .question-text { font-size: 1.3rem; font-weight: 600; line-height: 1.4; margin-bottom: 25px; }
+
+        .options-list { display: flex; flex-direction: column; gap: 15px; }
+        .option-btn { 
+            padding: 18px; border: 2px solid #e9ecef; border-radius: 8px; background: white; 
+            text-align: left; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) { border-color: var(--wjec-blue); background: #f0f7ff; }
+        .option-btn.correct-choice { background: var(--correct-green); color: white; border-color: var(--correct-green); }
+        .option-btn.incorrect-choice { background: var(--incorrect-red); color: white; border-color: var(--incorrect-red); }
+
+        #feedback { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; line-height: 1.6; border-left: 6px solid; }
+        .fb-correct { background: #d4edda; color: #155724; border-color: #28a745; }
+        .fb-incorrect { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+
+        .controls { margin-top: 40px; display: flex; gap: 20px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; flex: 1; }
+        .btn-blue { background: var(--wjec-blue); color: white; }
+        .btn-grey { background: #6c757d; color: white; }
+        .btn-summary { background: #17a2b8; color: white; width: 100%; margin-top: auto; }
+
+        #summary-panel { display: none; width: 100%; max-width: 900px; }
+        .summary-item { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            #app-container { flex-direction: column; }
+            #sidebar { width: 100%; height: auto; max-height: 250px; border-right: none; border-bottom: 1px solid #ddd; }
+            .nav-grid { grid-template-columns: repeat(10, 1fr); }
+            #content { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <aside id="sidebar">
+        <h2>WJEC Quiz Navigator</h2>
+        <div id="nav-list" class="nav-grid"></div>
+        <button class="btn btn-summary" id="summary-btn" style="margin-top: 20px;" onclick="viewSummary()">View Summary</button>
+        <button class="btn btn-grey" style="margin-top: 10px;" onclick="restartQuiz()">Restart Quiz</button>
+    </aside>
+
+    <main id="content">
+        <div id="quiz-panel" class="card">
+            <div class="question-meta" id="q-number">Question 1 of 20</div>
+            <div class="question-text" id="q-text"></div>
+            <div class="options-list" id="options"></div>
+            <div id="feedback"></div>
+            <div class="controls">
+                <button class="btn btn-grey" onclick="prevQuestion()">Previous</button>
+                <button class="btn btn-blue" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <div id="summary-panel">
+            <h1 style="margin-bottom: 20px;">Performance Summary</h1>
+            <div id="summary-container"></div>
+            <button class="btn btn-blue" onclick="closeSummary()">Return to Quiz</button>
+        </div>
+    </main>
+</div>
+
+<script>
+    const bank = [
+        {
+            q: "<span class='command-word'>State</span> the function of the moderator in a nuclear fission reactor.",
+            options: ["To absorb excess neutrons to stop the reaction", "To slow down fast-moving neutrons so they can be captured by U-235", "To cool the reactor core", "To shield the environment from radiation"],
+            correct: 1,
+            why: "The moderator slows down neutrons produced in fission so they can be captured by Uranium-235. Examiner Tip: Many candidates confuse this with control rods, which absorb neutrons."
+        },
+        {
+            q: "According to the principle of conservation of momentum, which condition must be met for momentum to remain constant?",
+            options: ["No heat energy is lost", "The collision must be elastic", "No external forces act on the system", "The objects must have the same mass"],
+            correct: 2,
+            why: "Total momentum before equals total momentum after, provided no external forces (like gravity or friction) act."
+        },
+        {
+            q: "Which physical quantity is used as an expression of the 'inertia' of a body?",
+            options: ["Weight", "Velocity", "Mass", "Resultant Force"],
+            correct: 2,
+            why: "Mass is the measure of inertia—the resistance of an object to a change in its motion."
+        },
+        {
+            q: "Describe what occurs to the wavelength of light in cosmological red shift.",
+            options: ["Light is shifted to shorter wavelengths as galaxies approach", "Wavelengths increase because light travels through expanding space", "Wavelengths decrease as galaxies move apart", "Light becomes gamma radiation over time"],
+            correct: 1,
+            why: "Red shift occurs because the space light travels through is expanding, stretching the waves to longer (redder) wavelengths."
+        },
+        {
+            q: "Identify the correct structure of an alpha particle.",
+            options: ["A high-speed electron", "A helium nucleus (2 protons, 2 neutrons)", "A helium atom with two electrons", "A single neutron and proton"],
+            correct: 1,
+            why: "An alpha particle is a helium nucleus. It has no electrons. Examiners note that calling it a 'helium atom' is incorrect."
+        },
+        {
+            q: "<span class='command-word'>State</span> what is represented by the area under a velocity-time graph.",
+            options: ["Acceleration", "Initial Speed", "Distance travelled", "Mean force"],
+            correct: 2,
+            why: "The area under a velocity-time graph represents the distance travelled by the object."
+        },
+        {
+            q: "A skydiver reaches terminal speed. <span class='command-word'>Explain</span> the relationship between weight and air resistance.",
+            options: ["Weight is greater than air resistance", "Weight and air resistance are equal and opposite", "Air resistance is zero at terminal speed", "Weight decreases until it matches air resistance"],
+            correct: 1,
+            why: "At terminal speed, air resistance has increased to match the weight. The forces are balanced and the resultant force is zero."
+        },
+        {
+            q: "Which stage in the life cycle of a star follows the Main Sequence for a star much larger than the Sun?",
+            options: ["Red Giant", "White Dwarf", "Red Supergiant", "Protostar"],
+            correct: 2,
+            why: "High-mass stars expand into Red Supergiants after the Main Sequence, leading to a supernova."
+        },
+        {
+            q: "In an emergency stop, if a driver's reaction time increases, which component of the overall stopping distance is affected?",
+            options: ["Braking distance only", "Thinking distance only", "Both thinking and braking distance", "Neither"],
+            correct: 1,
+            why: "Reaction time only affects thinking distance. Braking distance is determined by speed and road conditions."
+        },
+        {
+            q: "What piece of evidence supports the Big Bang theory by showing that space itself is expanding?",
+            options: ["Alpha decay", "Cosmic Microwave Background Radiation (CMBR)", "The existence of isotopes", "Nuclear fusion in the Sun"],
+            correct: 1,
+            why: "CMBR is radiation from the early Universe that has been stretched into microwaves by the expansion of space."
+        },
+        {
+            q: "Define an isotope of an element.",
+            options: ["Atoms with same neutrons, different protons", "Atoms with same mass number, different proton number", "Atoms with same protons, different neutrons", "Atoms with unstable nuclei"],
+            correct: 2,
+            why: "Isotopes are atoms of the same element with the same number of protons but different numbers of neutrons."
+        },
+        {
+            q: "Calculate the momentum of a 0.45 kg rugby ball travelling at 10 m/s.",
+            options: ["4.5 kg m/s", "45 kg m/s", "0.045 kg m/s", "10.45 kg m/s"],
+            correct: 0,
+            why: "Momentum = mass × velocity. 0.45 × 10 = 4.5 kg m/s."
+        },
+        {
+            q: "State the unit for the moment of a force.",
+            options: ["Newton (N)", "Joule (J)", "Newton metre (Nm)", "Pascal (Pa)"],
+            correct: 2,
+            why: "Moment = force × distance. The unit is the Newton metre (Nm)."
+        },
+        {
+            q: "Which type of radioactive emission has the highest penetrating power?",
+            options: ["Alpha", "Beta", "Gamma", "Neutrons"],
+            correct: 2,
+            why: "Gamma is an electromagnetic wave and is the most penetrating, requiring thick lead to stop."
+        },
+        {
+            q: "In a fission reactor, how is the rate of reaction increased?",
+            options: ["Lowering control rods further into the core", "Removing (raising) control rods from the core", "Adding more moderator", "Cooling the fuel rods"],
+            correct: 1,
+            why: "Control rods absorb neutrons. Removing them leaves more neutrons to cause fission, increasing the rate."
+        },
+        {
+            q: "According to Newton's Second Law, if the resultant force on an object is doubled, what happens to its acceleration?",
+            options: ["It stays the same", "It is halved", "It is doubled", "It is quadrupled"],
+            correct: 2,
+            why: "F = ma. Acceleration is directly proportional to the resultant force."
+        },
+        {
+            q: "Identify a natural source of background radiation.",
+            options: ["Nuclear power stations", "X-rays", "Radon gas from rocks", "Radioactive waste"],
+            correct: 2,
+            why: "Radon gas is a natural source originating from rocks like granite."
+        },
+        {
+            q: "What is the primary process by which the Sun generates energy?",
+            options: ["Nuclear fission of Uranium", "Nuclear fusion of Hydrogen", "Burning of Hydrogen gas", "Alpha decay of Helium"],
+            correct: 1,
+            why: "The Sun fuses hydrogen nuclei into helium, releasing energy. This is nuclear fusion."
+        },
+        {
+            q: "A car decelerates. Explain why the braking distance increases on a wet road.",
+            options: ["The driver takes longer to react", "There is less friction between tyres and the road", "The car has more kinetic energy", "The car's mass increases"],
+            correct: 1,
+            why: "Wet roads reduce the friction (grip), meaning a smaller braking force is applied over a longer distance."
+        },
+        {
+            q: "State the law of conservation of energy.",
+            options: ["Energy can be created by fission", "Total energy remains constant but can be transferred", "Energy is always lost as heat", "Kinetic energy always equals potential energy"],
+            correct: 1,
+            why: "Energy cannot be created or destroyed, only transferred from one form to another."
+        },
+        {
+            q: "Identify the correct symbol for a neutron used in balancing nuclear equations.",
+            options: ["1/1 n", "0/-1 e", "1/0 n", "1/0 N"],
+            correct: 2,
+            why: "A neutron has a mass of 1 and a proton number of 0. Symbol is lowercase 'n'."
+        },
+        {
+            q: "Explain why nuclear fusion is difficult to achieve on Earth.",
+            options: ["Hydrogen is too rare", "High temperatures are needed to overcome electrostatic repulsion", "It produces too much CO2", "It is a slow process"],
+            correct: 1,
+            why: "Positively charged nuclei repel each other. Extremely high temperatures and pressures are needed to get them close enough to fuse."
+        },
+        {
+            q: "What is the final stage of our Sun's life cycle?",
+            options: ["Supernova", "Black Hole", "White Dwarf", "Neutron Star"],
+            correct: 2,
+            why: "For a star of our Sun's mass, the path is: Main Sequence -> Red Giant -> White Dwarf."
+        },
+        {
+            q: "A student claims weight and air resistance on a falling object are a Newton's 3rd Law pair. Is this correct?",
+            options: ["Yes, they are equal and opposite", "No, they act on the same object", "No, gravity is not a force", "Yes, because the object reaches terminal speed"],
+            correct: 1,
+            why: "Newton's 3rd Law pairs must act on DIFFERENT objects. Weight and air resistance both act on the falling object."
+        },
+        {
+            q: "If an isotope has a half-life of 8 minutes, how much of a 60 mg sample remains after 24 minutes?",
+            options: ["30 mg", "15 mg", "7.5 mg", "0 mg"],
+            correct: 2,
+            why: "24 minutes is 3 half-lives (24/8). 60 -> 30 -> 15 -> 7.5 mg."
+        },
+        {
+            q: "State what occurs to the temperature of a star as it moves from the Main Sequence to a Red Giant.",
+            options: ["It increases", "It decreases", "It stays the same", "It doubles"],
+            correct: 1,
+            why: "As a star expands into a red giant, its surface temperature decreases (it becomes redder)."
+        },
+        {
+            q: "What property of a star determines its final fate (e.g., White Dwarf vs. Black Hole)?",
+            options: ["Its color", "Its distance from Earth", "Its initial mass", "Its surface temperature"],
+            correct: 2,
+            why: "The mass of the star at the start of its life determines which path it takes through the life cycle."
+        },
+        {
+            q: "Which type of radiation is identical to a high-speed electron?",
+            options: ["Alpha", "Beta", "Gamma", "X-ray"],
+            correct: 1,
+            why: "Beta radiation consists of high-energy, high-speed electrons emitted from the nucleus."
+        },
+        {
+            q: "Explain how a seatbelt protects a driver using Newton's First Law.",
+            options: ["It increases the force of impact", "It provides an unbalanced force to stop the driver's forward motion", "It reduces the driver's mass", "It eliminates the driver's inertia"],
+            correct: 1,
+            why: "The driver has inertia and would continue moving forward at constant velocity. The seatbelt provides the external resultant force to change this motion."
+        },
+        {
+            q: "Determine the spring constant if a 5 N force causes an extension of 0.04 m.",
+            options: ["0.2 N/m", "125 N/m", "20 N/m", "5.04 N/m"],
+            correct: 1,
+            why: "k = F/x. 5 / 0.04 = 125 N/m."
+        },
+        {
+            q: "What happens to the wavelength of light from a galaxy moving AWAY from us?",
+            options: ["It stretches (Red Shift)", "It compresses (Blue Shift)", "It disappears", "It becomes visible light"],
+            correct: 0,
+            why: "Receding galaxies show red shift as the light waves are stretched to longer wavelengths."
+        },
+        {
+            q: "In an H-R diagram, where are White Dwarfs typically found?",
+            options: ["Top left", "Top right", "Bottom left", "Bottom right"],
+            correct: 2,
+            why: "White dwarfs are hot but small (low luminosity), so they appear in the bottom-left of the diagram."
+        },
+        {
+            q: "Why is a large sample of dice used to model radioactive decay?",
+            options: ["To make the experiment take longer", "To reduce the effect of random fluctuations", "To guarantee an anomaly", "To ensure every dice 'decays'"],
+            correct: 1,
+            why: "Decay is random. A large sample size smooths out fluctuations and provides more reliable trends."
+        },
+        {
+            q: "Which force pulls gas and dust together to form a protostar?",
+            options: ["Magnetic force", "Electrostatic force", "Gravity", "Radiation pressure"],
+            correct: 2,
+            why: "Gravity is the universal force of attraction that causes clouds of gas and dust to collapse into stars."
+        },
+        {
+            q: "State the equation for Kinetic Energy.",
+            options: ["KE = mgh", "KE = 1/2 mv", "KE = 1/2 mv^2", "KE = Fd"],
+            correct: 2,
+            why: "KE = 1/2 mv^2. Examiners note that many students forget to square the velocity."
+        },
+        {
+            q: "How does the activity of a source change over one half-life?",
+            options: ["It doubles", "It reduces to zero", "It reduces by half", "It stays constant"],
+            correct: 2,
+            why: "Half-life is defined as the time taken for the activity (or number of nuclei) to halve."
+        },
+        {
+            q: "What is the resultant force on an object moving at constant velocity?",
+            options: ["Equal to its weight", "Zero", "Increasing", "Constant but non-zero"],
+            correct: 1,
+            why: "Newton's First Law states that if velocity is constant, the resultant force must be zero."
+        },
+        {
+            q: "Why are heavy elements like gold only produced in high-mass stars?",
+            options: ["They are produced during a Supernova", "They are made in Red Giants", "They are found in the asteroid belt", "They are created by nuclear fission"],
+            correct: 0,
+            why: "The extreme energy of a supernova explosion provides the conditions to fuse elements heavier than iron."
+        },
+        {
+            q: "In a car collision, how does a crumple zone reduce injury?",
+            options: ["By stopping the car instantly", "By increasing the time/distance of the collision to reduce force", "By increasing the car's inertia", "By absorbing the driver's momentum"],
+            correct: 1,
+            why: "Increasing the time taken to change momentum (or the distance over which work is done) reduces the impact force."
+        },
+        {
+            q: "Which particle is absorbed by a U-235 nucleus to start a fission reaction?",
+            options: ["Proton", "Alpha particle", "Slow neutron", "Electron"],
+            correct: 2,
+            why: "Fission is triggered when a Uranium-235 nucleus captures a slow-moving neutron."
+        },
+        {
+            q: "State the unit of acceleration.",
+            options: ["m/s", "m/s^2", "N/kg", "m^2/s"],
+            correct: 1,
+            why: "Acceleration is the change in velocity per second, measured in metres per second squared (m/s^2)."
+        },
+        {
+            q: "When a radioactive nucleus emits a beta particle, what happens to the proton number?",
+            options: ["It decreases by 1", "It stays the same", "It increases by 1", "It decreases by 2"],
+            correct: 2,
+            why: "In beta decay, a neutron turns into a proton (and an electron). The proton number increases by 1."
+        },
+        {
+            q: "What is cosmological red shift evidence for?",
+            options: ["The Sun is burning out", "The Universe is expanding", "Galaxies are made of gas", "The Earth is tilted"],
+            correct: 1,
+            why: "Red shift shows galaxies are receding from us, supporting the expansion of the Universe."
+        },
+        {
+            q: "Define 'Work Done' in physics.",
+            options: ["Power divided by time", "Force multiplied by distance in direction of force", "Mass multiplied by acceleration", "Energy created by a machine"],
+            correct: 1,
+            why: "Work Done = Force × Distance. It is a measure of energy transfer."
+        },
+        {
+            q: "Which type of star is the most stable?",
+            options: ["Protostar", "Main Sequence", "Red Giant", "Supernova"],
+            correct: 1,
+            why: "In the Main Sequence, the inward pull of gravity is perfectly balanced by the outward radiation pressure."
+        },
+        {
+            q: "What happens to a star's size when radiation pressure exceeds gravitational force?",
+            options: ["It shrinks", "It explodes", "It expands", "It stays the same"],
+            correct: 2,
+            why: "The star expands when outward pressure is greater than inward gravity (e.g., when moving to the Red Giant stage)."
+        },
+        {
+            q: "Identify the missing product of a typical Hydrogen fusion reaction: H-2 + H-3 -> ??? + n + energy.",
+            options: ["Uranium-235", "Helium-4", "Carbon-12", "Lithium-7"],
+            correct: 1,
+            why: "Fusion of deuterium and tritium produces a helium nucleus and a neutron."
+        },
+        {
+            q: "Why is an alpha source suitable for a smoke detector but a gamma source is not?",
+            options: ["Alpha is less dangerous", "Alpha has a longer half-life", "Alpha is easily blocked by smoke particles", "Gamma is too heavy"],
+            correct: 2,
+            why: "Alpha radiation is poorly penetrating and is blocked by smoke. Gamma would pass right through the smoke."
+        },
+        {
+            q: "State the equation for Weight.",
+            options: ["W = ma", "W = mg", "W = 1/2 mv^2", "W = Fd"],
+            correct: 1,
+            why: "Weight is the force of gravity on a mass: Weight = mass × gravitational field strength."
+        },
+        {
+            q: "What does the Principle of Moments state for a balanced object?",
+            options: ["Forces must be equal", "Clockwise moments = Anticlockwise moments", "Mass = Weight", "Distance = Force"],
+            correct: 1,
+            why: "For an object in equilibrium, the sum of clockwise moments about a pivot must equal the sum of anticlockwise moments."
+        }
+    ];
+
+    let currentQ = 0;
+    let activeSet = [];
+    let userAnswers = [];
+
+    function initQuiz() {
+        const shuffled = [...bank].sort(() => 0.5 - Math.random());
+        activeSet = shuffled.slice(0, 20);
+        userAnswers = new Array(20).fill(null);
+        currentQ = 0;
+        
+        renderNav();
+        loadQuestion();
+    }
+
+    function renderNav() {
+        const nav = document.getElementById('nav-list');
+        nav.innerHTML = '';
+        activeSet.forEach((_, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'nav-item';
+            btn.id = `nav-${i}`;
+            btn.innerText = i + 1;
+            btn.onclick = () => jumpTo(i);
+            nav.appendChild(btn);
+        });
+    }
+
+    function loadQuestion() {
+        const q = activeSet[currentQ];
+        document.getElementById('q-number').innerText = `Question ${currentQ + 1} of 20`;
+        document.getElementById('q-text').innerHTML = q.q;
+        
+        const container = document.getElementById('options');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = opt;
+            btn.onclick = () => handleAnswer(i);
+            
+            if (userAnswers[currentQ] !== null) {
+                btn.disabled = true;
+                if (i === q.correct) btn.classList.add('correct-choice');
+                if (i === userAnswers[currentQ] && i !== q.correct) btn.classList.add('incorrect-choice');
+            }
+            container.appendChild(btn);
+        });
+
+        // Update Nav
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`nav-${currentQ}`).classList.add('active');
+
+        // Feedback
+        const fb = document.getElementById('feedback');
+        if (userAnswers[currentQ] !== null) {
+            const isCorrect = userAnswers[currentQ] === q.correct;
+            fb.style.display = 'block';
+            fb.className = isCorrect ? 'fb-correct' : 'fb-incorrect';
+            fb.innerHTML = `<strong>${isCorrect ? 'Correct!' : 'Incorrect.'}</strong><br>${q.why}`;
+        } else {
+            fb.style.display = 'none';
+        }
+    }
+
+    function handleAnswer(index) {
+        if (userAnswers[currentQ] !== null) return;
+        userAnswers[currentQ] = index;
+        
+        const navItem = document.getElementById(`nav-${currentQ}`);
+        navItem.classList.add(index === activeSet[currentQ].correct ? 'correct' : 'incorrect');
+        
+        loadQuestion();
+    }
+
+    function jumpTo(i) { currentQ = i; loadQuestion(); }
+    function nextQuestion() { if (currentQ < 19) { currentQ++; loadQuestion(); } }
+    function prevQuestion() { if (currentQ > 0) { currentQ--; loadQuestion(); } }
+
+    function restartQuiz() {
+        if (confirm("Restart with new randomised questions?")) initQuiz();
+    }
+
+    function viewSummary() {
+        document.getElementById('quiz-panel').style.display = 'none';
+        document.getElementById('summary-panel').style.display = 'block';
+        
+        const container = document.getElementById('summary-container');
+        container.innerHTML = '';
+        
+        userAnswers.forEach((ans, i) => {
+            if (ans === null) return;
+            const q = activeSet[i];
+            const isCorrect = ans === q.correct;
+            
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            div.style.borderColor = isCorrect ? 'var(--correct-green)' : 'var(--incorrect-red)';
+            div.innerHTML = `
+                <p><strong>Q${i+1}:</strong> ${q.q}</p>
+                <p>Your answer: <span style="color:${isCorrect ? 'green' : 'red'}">${q.options[ans]}</span></p>
+                <p><small>${q.why}</small></p>
+            `;
+            container.appendChild(div);
+        });
+        
+        if (container.innerHTML === '') container.innerHTML = "<p>No questions answered yet.</p>";
+    }
+
+    function closeSummary() {
+        document.getElementById('quiz-panel').style.display = 'block';
+        document.getElementById('summary-panel').style.display = 'none';
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
