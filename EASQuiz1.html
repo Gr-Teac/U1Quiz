@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Level Electronics Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<div id="app" class="flex flex-col md:flex-row h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-full md:w-64 lg:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col h-[30%] md:h-full">
+        <div class="p-5 border-b border-slate-100 bg-white">
+            <h1 class="text-xl font-black text-blue-600 leading-tight">A-Level Electronics</h1>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Component & System Mastery</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50/30" id="question-list">
+            <!-- Questions injected here -->
+        </nav>
+        <div class="p-5 border-t border-slate-100 bg-white shadow-sm">
+            <div class="flex justify-between items-center text-sm font-bold text-slate-600 mb-2">
+                <span>Session Progress</span>
+                <span id="progress-text">0/20</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-10 lg:p-16">
+        <div class="max-w-3xl mx-auto">
+            <!-- Question Card -->
+            <div id="quiz-container" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 transition-all">
+                <div id="question-header" class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="question-tag" class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100">Question 1 / 20</span>
+                        <button onclick="startNewSession()" class="flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            Refresh Bank
+                        </button>
+                    </div>
+                    <h2 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed"></h2>
+                </div>
+
+                <div id="options-container" class="grid gap-3">
+                    <!-- Options injected here -->
+                </div>
+
+                <!-- Feedback Section -->
+                <div id="feedback-container" class="mt-8 hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div id="feedback-box" class="p-5 rounded-2xl border-2 flex gap-4 items-start">
+                        <div id="feedback-icon" class="mt-1 flex-shrink-0 text-xl"></div>
+                        <div class="flex-1">
+                            <p id="feedback-status" class="font-black text-xs uppercase tracking-widest mb-1"></p>
+                            <p id="feedback-text" class="text-slate-600 text-sm leading-relaxed italic"></p>
+                        </div>
+                    </div>
+                    <button id="next-btn" class="mt-6 w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 active:scale-[0.98]">Continue</button>
+                </div>
+            </div>
+
+            <!-- Summary View -->
+            <div id="summary-container" class="hidden text-center py-12 px-4">
+                <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 mb-2">Systems Online</h2>
+                <p class="text-slate-500 font-medium mb-8">Session diagnostics complete.</p>
+                
+                <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-10">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Correct</p>
+                        <p id="final-score" class="text-2xl font-black text-blue-600">0/20</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Efficiency</p>
+                        <p id="final-percent" class="text-2xl font-black text-blue-600">0%</p>
+                    </div>
+                </div>
+
+                <button onclick="startNewSession()" class="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95">
+                    Re-Initialize
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const masterQuestionBank = [
+    { q: "Simplify the Boolean expression A . 0", a: "0", options: ["A", "1", "0", "NOT A"], f: "Any input ANDed with logic 0 always results in an output of 0." }, { q: "Simplify the Boolean expression A + 1", a: "1", options: ["A", "1", "0", "NOT A"], f: "Any input ORed with logic 1 always results in an output of 1." }, { q: "Simplify the Boolean expression A . A", a: "A", options: ["A", "1", "0", "A squared"], f: "An input ANDed with itself remains unchanged as A." }, { q: "Simplify the Boolean expression A + NOT A", a: "1", options: ["A", "1", "0", "NOT A"], f: "ORing a variable with its inverse always provides a logic 1 path." }, { q: "Simplify the Boolean expression A . NOT A", a: "0", options: ["A", "1", "0", "NOT A"], f: "A variable and its inverse cannot both be high, so the AND output is always 0." }, { q: "According to DeMorgan's Theorem, what is the equivalent of NOT (A . B)?", a: "NOT A + NOT B", options: ["NOT A . NOT B", "A + B", "NOT A + NOT B", "NOT (A + B)"], f: "Breaking the bar over an AND changes the operation to OR and inverts each term." }, { q: "According to DeMorgan's Theorem, what is the equivalent of NOT (A + B)?", a: "NOT A . NOT B", options: ["NOT A + NOT B", "A . B", "NOT A . NOT B", "NOT (A . B)"], f: "Breaking the bar over an OR changes the operation to AND and inverts each term." }, { q: "Identify the simplest form of the expression A.B + B", a: "B", options: ["A", "B", "A + B", "1"], f: "Using Boolean identities, A.B + B simplifies to B because if B is 1, the output is 1; if B is 0, the output is 0." }, { q: "In a 4-input Karnaugh map, how many cells are in a group that simplifies to a single term containing only two variables?", a: "4", options: ["1", "2", "4", "8"], f: "A group of 4 cells on a 16-cell map eliminates two variables, leaving a 2-variable term." }, { q: "What is the purpose of a Karnaugh map?", a: "To produce as few groups as possible for the simplest expression", options: ["To convert binary to hex", "To calculate power dissipation", "To produce as few groups as possible for the simplest expression", "To design bridge rectifiers"], f: "The objective is to identify the largest possible groups of 1s to minimise the logic gates required." }, { q: "Calculate the open-circuit voltage (VOC) for a potential divider with 18V supply, R1 = 160Ω and R2 = 560Ω.", a: "14V", options: ["18V", "14V", "4V", "6.9V"], f: "VOC = Vin * R2 / (R1 + R2). Here, 18 * 560 / 720 = 14V." }, { q: "How is the equivalent Thevenin resistance (R0) calculated?", a: "VOC / ISC", options: ["Vin / R1", "VOC / ISC", "R1 + R2", "R1 in parallel with R2"], f: "R0 is determined by dividing the open-circuit voltage by the short-circuit current." }, { q: "What happens to the output voltage of a voltage source when a load resistor is added?", a: "It decreases due to the voltage drop across R0", options: ["It increases", "It stays the same", "It decreases due to the voltage drop across R0", "It doubles"], f: "The load current flows through the internal resistance R0, creating a voltage drop that reduces the terminal voltage." }, { q: "Which component is often used to provide signal conditioning for a noisy sensor input?", a: "Schmitt Inverter", options: ["NOT gate", "Schmitt Inverter", "Zener diode", "D-type flip-flop"], f: "A Schmitt inverter uses hysteresis to eliminate minor fluctuations or noise, providing a clean switching edge." }, { q: "Identify the truth table output for a 2-input EXOR gate with inputs A=1, B=1.", a: "0", options: ["0", "1", "High-Z", "Error"], f: "An Exclusive-OR gate output is high only when the inputs are different." }, { q: "Identify the truth table output for a 2-input EXNOR gate with inputs A=1, B=1.", a: "1", options: ["0", "1", "High-Z", "Error"], f: "An Exclusive-NOR gate output is high when the inputs are the same." }, { q: "Which pins on an 8-to-1 multiplexer correspond to the 'select' inputs for a 3-variable logic system?", a: "C, B, and A", options: ["D0, D1, D2", "Enable pins", "C, B, and A", "VCC and GND"], f: "The three variables (C, B, A) act as the address lines to select which data input (D0-D7) is sent to the output." }, { q: "State one advantage of using a multiplexer as a logic system.", a: "It can be reconfigured for a different function by reprogramming", options: ["It handles higher power", "It eliminates the need for a supply", "It can be reconfigured for a different function by reprogramming", "It is faster than a single NAND gate"], f: "Multiplexers allow complex logic functions to be changed without rewiring the hardware." }, { q: "What is the function of a 'flyback' diode when placed across a relay coil?", a: "To protect the switching transistor from back-EMF", options: ["To increase the relay speed", "To protect the switching transistor from back-EMF", "To rectify the supply", "To set the reference voltage"], f: "When the relay de-energises, the collapsing magnetic field induces a high voltage; the diode provides a safe path for this current." }, { q: "Calculate the base resistor (RB) needed to just saturate a transistor with IC = 200mA, hFE = 80, and a 11.6V logic signal.", a: "4360 Ω", options: ["4700 Ω", "5000 Ω", "4360 Ω", "3800 Ω"], f: "IB = IC / hFE = 2.5mA. VRB = 11.6V - 0.7V = 10.9V. RB = 10.9V / 2.5mA = 4360Ω." }, { q: "When selecting a preferred resistor value for a transistor base to ensure saturation, should you choose the value above or below the calculated value?", a: "The value below", options: ["The value above", "The value below", "Exactly the same", "It doesn't matter"], f: "Choosing a slightly lower resistance ensures the base current is higher than the minimum needed for saturation." }, { q: "Define 'transconductance' (gM) for a MOSFET.", a: "The change in drain current divided by the change in gate-source voltage", options: ["The total resistance of the channel", "The gate threshold voltage", "The change in drain current divided by the change in gate-source voltage", "Power dissipation per volt"], f: "gM is the gradient of the ID vs VGS graph, representing how effectively the gate voltage controls the drain current." }, { q: "Calculate the power dissipated in a MOSFET if ID = 4A and rDSon = 0.08Ω.", a: "1.28 W", options: ["0.32 W", "1.28 W", "4.0 W", "0.08 W"], f: "Power = ID squared * rDSon. Here, 16 * 0.08 = 1.28W." }, { q: "What is the assumed gate threshold voltage (VGSth) for an enhancement mode MOSFET in exam calculations?", a: "3 V", options: ["0.7 V", "0 V", "3 V", "5 V"], f: "The device does not conduct until VGS exceeds the 3V threshold." }, { q: "Calculate the voltage gain of a non-inverting amplifier with Rf = 16kΩ and R1 = 2kΩ.", a: "9", options: ["8", "9", "-8", "1"], f: "Gain = 1 + (Rf / R1). Here, 1 + (16/2) = 9." }, { q: "Identify the input impedance of an ideal operational amplifier.", a: "Infinite", options: ["Zero", "10 kΩ", "Infinite", "1 MΩ"], f: "An ideal op-amp draws no current from the signal source." }, { q: "What is the 'virtual earth' principle in an op-amp circuit with negative feedback?", a: "The inverting input is at the same potential as the non-inverting input", options: ["The output is always 0V", "The supply pins are grounded", "The inverting input is at the same potential as the non-inverting input", "Current cannot flow through the feedback resistor"], f: "Negative feedback acts to keep the difference between the two inputs at virtually zero volts." }, { q: "A summing amplifier has Rf = 40kΩ and two inputs with R1=20kΩ and R2=10kΩ. If V1=2V and V2=1.8V, calculate VOUT.", a: "-11.2V", options: ["11.2V", "-11.2V", "-8V", "-1.8V"], f: "Vout = -Rf(V1/R1 + V2/R2) = -40(2/20 + 1.8/10) = -40(0.1 + 0.18) = -11.2V." }, { q: "What defines the 'bandwidth' of a voltage amplifier?", a: "The frequency range where gain is at least 0.7 of the maximum gain", options: ["The maximum frequency it can reach", "The frequency where gain is 0", "The frequency range where gain is at least 0.7 of the maximum gain", "The speed at which the output changes"], f: "Bandwidth is the range between the points where the power drops to half, or the voltage gain drops to 1/sqrt(2) (approx 0.7) of its peak." }, { q: "Define 'Slew Rate' of an op-amp.", a: "The maximum rate of change of output voltage with time", options: ["The maximum frequency", "The maximum voltage gain", "The maximum rate of change of output voltage with time", "The power supply limit"], f: "Slew rate limits how fast the output can follow a rapidly changing input, often resulting in a saw-tooth distortion of sine waves." }, { q: "How can clipping distortion be reduced in an op-amp amplifier?", a: "Increase the power supply voltage or reduce the gain", options: ["Use a faster op-amp", "Increase the power supply voltage or reduce the gain", "Add a smoothing capacitor", "Increase the input frequency"], f: "Clipping occurs when the required output voltage exceeds the saturation limits of the power supply." }, { q: "Calculate the time constant (T) for a 100kΩ resistor and a 4.7µF capacitor.", a: "0.47 s", options: ["4.7 s", "0.47 s", "0.047 s", "1.0 s"], f: "T = R * C. Here, 100,000 * 0.0000047 = 0.47 seconds." }, { q: "What is the half-life time (t½) for an RC circuit?", a: "0.69 RC", options: ["RC", "0.69 RC", "1.1 RC", "5 RC"], f: "The voltage reaches 50% of the supply (or falls by 50%) in approximately 0.69 time constants." }, { q: "For a 555 astable, calculate the frequency if R1=30kΩ, R2=30kΩ, and C=16µF.", a: "1 Hz", options: ["1 Hz", "1.44 Hz", "0.5 Hz", "2 Hz"], f: "f = 1.44 / ((R1 + 2R2)C) = 1.44 / ((30k + 60k) * 16µ) = 1.44 / (90,000 * 16µ) = 1 Hz." }, { q: "In a 555 astable, how is the 'space' time (tL) calculated?", a: "0.7 * R2 * C", options: ["0.7 * R1 * C", "0.7 * R2 * C", "0.7 * (R1 + R2) * C", "1.1 * R1 * C"], f: "The capacitor discharges only through resistor R2 during the 'space' (output low) period." }, { q: "What is the mark/space ratio for a 555 astable where R1 = 30kΩ and R2 = 30kΩ?", a: "2:1", options: ["1:1", "2:1", "3:1", "1:2"], f: "Ratio = (R1 + R2) / R2 = (30k + 30k) / 30k = 2:1." }, { q: "Calculate the pulse duration for a 555 monostable with R = 16kΩ and C = 680µF.", a: "12 s", options: ["1.1 s", "10 s", "12 s", "7.5 s"], f: "T = 1.1 * R * C. Here, 1.1 * 16,000 * 0.00068 = 11.968 (approx 12s)." }, { q: "What happens to a NAND-gate S-R bistable when both S and R inputs are logic 0?", a: "Both outputs go high (invalid state)", options: ["Q=1, NOT Q=0", "Q=0, NOT Q=1", "Both outputs go high (invalid state)", "No change"], f: "Applying logic 0 to both inputs of a NAND latch forces both outputs high, which contradicts the complementary nature of Q and NOT Q." }, { q: "Define 'propagation delay'.", a: "The time taken for the output to respond to a change in input", options: ["The time it takes to charge a capacitor", "The speed of light through the gate", "The time taken for the output to respond to a change in input", "The delay caused by negative feedback"], f: "Propagation delay is the inherent time it takes for electronic signals to pass through logic gates." }, { q: "In a 4-bit binary up-counter, which output represents the Least Significant Bit (LSB)?", a: "QA", options: ["QA", "QB", "QC", "QD"], f: "QA changes state on every clock pulse, representing the 2 to the power 0 column." }, { q: "To make a 4-bit counter reset on the 5th pulse (modulo-5), which outputs should be connected to the AND gate that drives the reset?", a: "QA and QC", options: ["QA and QB", "QB and QC", "QA and QC", "QC and QD"], f: "Binary 5 is 0101. QA (1) and QC (4) must both be high to trigger the reset at count 5." }, { q: "What is the decimal equivalent of the binary number 10000111?", a: "135", options: ["128", "135", "199", "255"], f: "128 + 0 + 0 + 0 + 0 + 4 + 2 + 1 = 135." }, { q: "Convert binary 01001011 to Hexadecimal.", a: "4B", options: ["411", "4B", "91", "2D"], f: "0100 = 4; 1011 = 11 (which is B in Hex). Result is 4B." }, { q: "What is the primary difference between a BCD counter and a 4-bit binary counter?", a: "BCD counters reset automatically on the tenth pulse", options: ["Binary counters are faster", "BCD counters reset automatically on the tenth pulse", "Binary counters use more power", "BCD counters only count to 8"], f: "A Binary Coded Decimal (BCD) counter only counts from 0 to 9 (10 states) before returning to 0." }, { q: "In a full-wave bridge rectifier, how many diodes are conducting at any one time?", a: "2", options: ["1", "2", "3", "4"], f: "Two diodes conduct during the positive half-cycle and the other two during the negative half-cycle." }, { q: "Calculate the peak output voltage (VOUT) of a full-wave rectifier if the RMS secondary voltage is 8.5V.", a: "10.6V", options: ["12V", "10.6V", "8.5V", "7.1V"], f: "Vpeak = 8.5 * sqrt(2) = 12V. Subtracting 1.4V for the two diode drops in a bridge gives 10.6V." }, { q: "What effect does increasing the load current have on the ripple voltage of a power supply?", a: "It increases the ripple voltage", options: ["It decreases the ripple", "It stays the same", "It eliminates the ripple", "It increases the ripple voltage"], f: "As the load draws more current, the smoothing capacitor discharges more quickly between rectified peaks, leading to larger voltage swings." }, { q: "Calculate the ripple voltage (Vr) if I = 100mA, f = 100Hz, and C = 1000µF.", a: "1.0 V", options: ["0.1 V", "1.0 V", "10 V", "0.5 V"], f: "Vr = I / (f * C) = 0.1 / (100 * 0.001) = 1.0V." }, { q: "A 5.6V Zener regulator is used. What is the minimum voltage across the series resistor if the supply is 12V?", a: "6.4V", options: ["12V", "5.6V", "6.4V", "0.7V"], f: "Vr = Vsupply - Vzener = 12V - 5.6V = 6.4V." }, { q: "If a Zener regulator is specified to handle a maximum load of 250mA and requires a 10mA holding current, what total current must the series resistor allow?", a: "260mA", options: ["250mA", "10mA", "260mA", "240mA"], f: "The resistor must provide the total current for both the load and the minimum Zener holding current." }, { q: "What happens to the Zener diode if the load is disconnected in a Zener regulator circuit?", a: "The Zener diode must dissipate all the current, increasing its power consumption", options: ["The circuit shuts down", "The voltage drops to zero", "The Zener diode must dissipate all the current, increasing its power consumption", "The series resistor will blow"], f: "Without a load, the total current flows through the Zener; if this exceeds its power rating (P = Vz * Iz), the diode will fail." }, { q: "Identify the purpose of a 'pull-down' resistor in a switch circuit.", a: "To ensure the input is at logic 0 when the switch is open", options: ["To limit current through the switch", "To ensure the input is at logic 0 when the switch is open", "To prevent a short circuit", "To increase the logic level to 1"], f: "The resistor provides a path to 0V, preventing the input from 'floating' when the switch is not pressed." }, { q: "In a flowchart, what shape is used for a decision or testing step?", a: "Diamond", options: ["Rectangle", "Oval", "Diamond", "Parallelogram"], f: "A diamond box contains a YES/NO question that determines the program flow." }, { q: "What is the frequency of the ripple voltage in a full-wave rectifier if the AC mains is 50Hz?", a: "100 Hz", options: ["25 Hz", "50 Hz", "100 Hz", "200 Hz"], f: "Full-wave rectification effectively doubles the frequency as both half-cycles are moved to the positive side." }, { q: "Which op-amp configuration provides a voltage gain of exactly 1 and very high input impedance?", a: "Voltage Follower", options: ["Inverting Amplifier", "Non-Inverting Amplifier", "Summing Amplifier", "Voltage Follower"], f: "The voltage follower (or buffer) has the output connected directly to the inverting input, making Vout = Vin." }, { q: "If an op-amp with a slew rate of 2V/µs is required to output a 10V step, how long will it take for the output to reach 10V?", a: "5 µs", options: ["2 µs", "5 µs", "10 µs", "20 µs"], f: "Time = Voltage / Slew Rate = 10V / 2V/µs = 5µs." }, { q: "In sequential logic, what triggers a 'rising-edge triggered' D-type flip-flop?", a: "The transition from logic 0 to logic 1", options: ["A constant logic 1 level", "The transition from logic 1 to logic 0", "The transition from logic 0 to logic 1", "Any change in input D"], f: "The device only samples the data input (D) at the exact moment the clock pulse goes high." }, { q: "How many clock pulses are needed for a 4-bit binary counter to return to its initial 0000 state?", a: "16", options: ["4", "8", "10", "16"], f: "A 4-bit counter has 16 states (0 to 15) and resets on the 16th pulse." }, { q: "What is the effect of 'contact bounce' in a mechanical switch?", a: "It generates multiple rapid pulses from a single press", options: ["It reduces the supply voltage", "It generates multiple rapid pulses from a single press", "It slows down the logic system", "It increases power dissipation"], f: "Mechanical contacts literally bounce, causing a logic system to 'see' many presses instead of one." }, { q: "Which logic function is achieved by connecting the outputs of two NOT gates to the inputs of an OR gate?", a: "NAND", options: ["AND", "NOR", "NAND", "EXOR"], f: "According to DeMorgan, NOT A + NOT B is equivalent to NOT (A . B), which is a NAND gate." }, { q: "Calculate the resistance of a thermistor (RT) at 25°C given a potential divider with 12V supply, R1=10kΩ and the output VT=4V.", a: "5 kΩ", options: ["5 kΩ", "10 kΩ", "15 kΩ", "20 kΩ"], f: "Using ratios: 4V / 12V = RT / (RT + 10k). 4(RT + 10k) = 12RT -> 40k = 8RT -> RT = 5kΩ." }, { q: "What is the Gain-Bandwidth Product (GBP) used for?", a: "To estimate the bandwidth for a given voltage gain", options: ["To calculate total power dissipation", "To estimate the bandwidth for a given voltage gain", "To find the maximum supply voltage", "To determine the slew rate"], f: "Bandwidth = GBP / Voltage Gain. It shows the trade-off between amplification and frequency range." }, { q: "Which op-amp input impedance is approximately equal to its input resistor (Rin)?", a: "Inverting Amplifier", options: ["Non-Inverting Amplifier", "Inverting Amplifier", "Voltage Follower", "Summing Amplifier"], f: "In an inverting amplifier, the inverting terminal is a 'virtual earth' (0V), so the input source sees only Rin." }, { q: "Calculate the BCD representation of decimal 58.", a: "0101 1000", options: ["0011 1010", "1110 10", "0101 1000", "0101 1011"], f: "BCD converts each digit separately: 5 = 0101, 8 = 1000." }, { q: "Why might you replace a Bipolar Transistor with a MOSFET in a high-current switching application?", a: "MOSFETs have lower on-resistance and consume less power when saturated", options: ["Transistors are too fast", "MOSFETs are cheaper", "MOSFETs have lower on-resistance and consume less power when saturated", "Transistors require more voltage"], f: "MOSFETs often have very low rDSon, reducing the heat generated (P = I squared * R) compared to the VCEsat of a transistor." }, { q: "If a MOSFET has a typical gM of 0.7 S, how much will ID change if VGS increases by 2V?", a: "1.4 A", options: ["0.35 A", "0.7 A", "1.4 A", "2.0 A"], f: "Change in ID = gM * change in VGS = 0.7 * 2 = 1.4A." }, { q: "What is the purpose of the 0.7 factor in the 555 timer timing equations?", a: "It represents the natural log of 2 (ln 2)", options: ["It is the diode voltage drop", "It represents the natural log of 2 (ln 2)", "It is a safety factor", "It accounts for propagation delay"], f: "The 555 threshold levels are 1/3 and 2/3 of Vcc; the time to charge between these levels involves ln(2) which is approx 0.69." }, { q: "Identify the number of states in a Modulo-9 counter.", a: "9", options: ["8", "9", "10", "16"], f: "A Modulo-n counter has exactly n states, counting from 0 to n-1." }, { q: "What is the maximum output voltage swing of an op-amp powered by +/- 16V?", a: "Approximately +/- 15V", options: ["+/- 16V", "+/- 32V", "Approximately +/- 15V", "0 to 16V"], f: "Op-amps typically saturate about 1V below their power supply rails." }, { q: "Which logic gate is equivalent to a series of three NOT gates?", a: "NOT gate", options: ["AND gate", "OR gate", "NOT gate", "EXOR gate"], f: "An odd number of inversions always results in a final inversion (NOT)." }
+];
+
+let quizSet = [];
+let currentIndex = 0;
+let userAnswers = [];
+let score = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startNewSession() {
+    const pool = [...masterQuestionBank];
+    shuffle(pool);
+    quizSet = pool.slice(0, 20);
+    currentIndex = 0;
+    userAnswers = new Array(20).fill(null);
+    score = 0;
+    initUI();
+}
+
+function initUI() {
+    document.getElementById('quiz-container').classList.remove('hidden');
+    document.getElementById('summary-container').classList.add('hidden');
+    renderSidebar();
+    loadQuestion(0);
+    updateProgress();
+}
+
+function renderSidebar() {
+    const list = document.getElementById('question-list');
+    list.innerHTML = '';
+    quizSet.forEach((item, index) => {
+        const btn = document.createElement('button');
+        // Updated styling and "Question" label
+        btn.className = `w-full text-left p-3 mb-2 rounded-xl text-[11px] transition-all flex items-center justify-between border ${index === currentIndex ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-transparent border-transparent text-slate-500 hover:bg-slate-50'}`;
+        btn.onclick = () => loadQuestion(index);
+        
+        let status = '';
+        if (userAnswers[index] !== null) {
+            status = userAnswers[index].isCorrect 
+                ? '<div class="w-2 h-2 rounded-full bg-green-500"></div>' 
+                : '<div class="w-2 h-2 rounded-full bg-red-500"></div>';
+        }
+        
+        btn.innerHTML = `<span>Question ${index + 1}</span> ${status}`;
+        list.appendChild(btn);
+    });
+}
+
+function loadQuestion(index) {
+    currentIndex = index;
+    const data = quizSet[index];
+    
+    document.getElementById('question-tag').textContent = `Logic Segment ${index + 1} / 20`;
+    document.getElementById('question-text').textContent = data.q;
+    document.getElementById('feedback-container').classList.add('hidden');
+    
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    
+    data.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-4 border-2 border-slate-100 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all font-medium text-slate-700 flex items-center gap-4 group";
+        
+        let icon = '<div class="w-5 h-5 rounded-full border-2 border-slate-200 flex-shrink-0 group-hover:border-blue-400"></div>';
+        
+        if (userAnswers[index] !== null) {
+            btn.disabled = true;
+            if (opt === data.a) {
+                btn.className = "w-full text-left p-4 border-2 border-green-500 bg-green-50 rounded-2xl font-bold text-green-700 flex items-center gap-4";
+                icon = '<div class="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-[10px]">✓</div>';
+            } else if (opt === userAnswers[index].selected) {
+                btn.className = "w-full text-left p-4 border-2 border-red-500 bg-red-50 rounded-2xl font-bold text-red-700 flex items-center gap-4";
+                icon = '<div class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">✕</div>';
+            } else {
+                btn.className = "w-full text-left p-4 border-2 border-slate-50 bg-slate-50/50 opacity-40 rounded-2xl flex items-center gap-4";
+            }
+            showFeedback(userAnswers[index].isCorrect);
+        } else {
+            btn.onclick = () => handleAnswer(opt);
+        }
+        
+        btn.innerHTML = `${icon} <span class="mono">${opt}</span>`;
+        container.appendChild(btn);
+    });
+    
+    renderSidebar();
+}
+
+function handleAnswer(selected) {
+    const correct = quizSet[currentIndex].a;
+    const isCorrect = selected === correct;
+    userAnswers[currentIndex] = { selected, isCorrect };
+    if (isCorrect) score++;
+    
+    updateProgress();
+    loadQuestion(currentIndex);
+}
+
+function showFeedback(isCorrect) {
+    const feedback = document.getElementById('feedback-container');
+    const status = document.getElementById('feedback-status');
+    const box = document.getElementById('feedback-box');
+    const icon = document.getElementById('feedback-icon');
+    const text = document.getElementById('feedback-text');
+    
+    feedback.classList.remove('hidden');
+    
+    if (isCorrect) {
+        box.className = "p-5 rounded-2xl border-2 border-green-100 bg-green-50/50 flex gap-4 items-start";
+        status.textContent = "Signal Accurate";
+        status.className = "font-black text-[10px] uppercase tracking-widest mb-1 text-green-700";
+        icon.innerHTML = '⚡';
+    } else {
+        box.className = "p-5 rounded-2xl border-2 border-red-100 bg-red-50/50 flex gap-4 items-start";
+        status.textContent = "Logic Mismatch";
+        status.className = "font-black text-[10px] uppercase tracking-widest mb-1 text-red-700";
+        icon.innerHTML = '🔧';
+    }
+    
+    text.textContent = quizSet[currentIndex].f;
+
+    const nextBtn = document.getElementById('next-btn');
+    if (currentIndex < 19) {
+        nextBtn.textContent = "Advance Sequence";
+        nextBtn.onclick = () => loadQuestion(currentIndex + 1);
+    } else {
+        nextBtn.textContent = "Compile Results";
+        nextBtn.onclick = finish;
+    }
+}
+
+function updateProgress() {
+    const count = userAnswers.filter(a => a !== null).length;
+    document.getElementById('progress-bar').style.width = (count / 20 * 100) + '%';
+    document.getElementById('progress-text').textContent = count + '/20';
+}
+
+function finish() {
+    document.getElementById('quiz-container').classList.add('hidden');
+    document.getElementById('summary-container').classList.remove('hidden');
+    document.getElementById('final-score').textContent = score + '/20';
+    document.getElementById('final-percent').textContent = Math.round(score/20*100) + '%';
+}
+
+window.onload = startNewSession;
+</script>
+</body>
+</html>
