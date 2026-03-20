@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCSE Unit 2 Physics | Mastery Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+        }
+
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 1024px) {
+            .app-container {
+                grid-template-columns: 320px 1fr;
+            }
+            .sidebar {
+                display: flex !important;
+                border-right: 1px solid #e2e8f0;
+            }
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:active { transform: scale(0.98); }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hp-bar { transition: width 0.4s ease-in-out; }
+
+        .nav-dot {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 800;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .nav-dot.selectable { cursor: pointer; }
+        .nav-dot.selectable:hover { transform: scale(1.1); }
+
+        .damage-pop {
+            animation: popUp 0.8s ease-out forwards;
+            position: absolute;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes popUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-60px); opacity: 0; }
+        }
+
+        .speech-bubble {
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            font-size: 11px;
+            line-height: 1.2;
+            font-weight: bold;
+            width: clamp(120px, 80%, 180px); /* Responsive width */
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            z-index: 50;
+            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.3); }
+            70% { transform: translateX(-50%) scale(1.1); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+    </style>
+</head>
+<body class="text-slate-900 overflow-x-hidden">
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar hidden flex-col bg-white p-6 sticky top-0 h-screen overflow-y-auto">
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">Physics U2</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">v10.1 Pro</p>
+            </div>
+
+            <div id="sidebar-active-content" class="hidden space-y-6">
+                <!-- Status Indicators -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="prog-label">Progress</p>
+                    <div class="flex items-end gap-2 mb-2">
+                        <span id="side-current" class="text-3xl font-black text-slate-800">0</span>
+                        <span class="text-slate-400 font-bold mb-1">/ <span id="side-total">0</span></span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="side-bar" class="bg-indigo-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Battle Specific Sidebar -->
+                <div id="battle-sidebar-stats" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white">
+                        <p class="text-[10px] font-black text-indigo-400 uppercase mb-2">Battery Charge</p>
+                        <div class="flex items-center gap-3">
+                            <span id="side-charge" class="text-2xl font-black">0</span>
+                            <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="side-charge-bar" class="bg-indigo-400 h-full w-0 transition-all"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigator -->
+                <div id="navigator-section">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="nav-label">Question Map</p>
+                    <div id="nav-grid" class="grid grid-cols-6 gap-1.5"></div>
+                </div>
+            </div>
+
+            <div id="sidebar-empty" class="flex-1 flex flex-col items-center justify-center text-center opacity-30">
+                <div class="text-4xl mb-2">🛰️</div>
+                <p class="text-[10px] font-black uppercase tracking-widest">System Idle</p>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-slate-100">
+                <button onclick="resetToMenu()" class="w-full py-3 text-sm font-bold text-slate-400 hover:text-rose-500 transition-colors">Abort Mission</button>
+            </div>
+        </aside>
+
+        <main class="flex flex-col relative">
+            <nav class="lg:hidden glass sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b">
+                <span onclick="resetToMenu()" class="font-extrabold text-indigo-600 cursor-pointer">Physics U2</span>
+                <div id="mob-stats" class="hidden text-xs font-bold text-slate-500">
+                    <span id="mob-prog-text">0/0</span>
+                    <button onclick="resetToMenu()" class="ml-3 text-rose-500">Exit</button>
+                </div>
+            </nav>
+
+            <div class="flex-1 flex flex-col items-center justify-start p-6 md:p-12 overflow-y-auto">
+                <div id="content-wrap" class="w-full max-w-2xl relative">
+                    
+                    <!-- MENU -->
+                    <div id="menu-screen" class="fade-in space-y-8 py-6">
+                        <div class="text-center md:text-left">
+                            <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">Select <span class="text-indigo-600">Module.</span></h2>
+                            <p class="text-slate-500 mt-2">Master 70 core objectives through different training protocols.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button onclick="startSession('standard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-indigo-500 transition-all text-left shadow-sm">
+                                <div class="text-2xl mb-3">🎯</div>
+                                <h3 class="font-bold text-lg">Standard Quiz</h3>
+                                <p class="text-xs text-slate-500 mt-1">20 Random objectives from the bank.</p>
+                            </button>
+
+                            <button onclick="startSession('flashcard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-emerald-500 transition-all text-left shadow-sm">
+                                <div class="text-2xl mb-3">📇</div>
+                                <h3 class="font-bold text-lg">Full Flashcards</h3>
+                                <p class="text-xs text-slate-500 mt-1">Review all 70 questions with hidden logic.</p>
+                            </button>
+
+                            <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                <div>
+                                    <h3 class="font-bold text-lg flex items-center gap-2">Survival <span class="text-rose-500 text-sm">💀</span></h3>
+                                    <p class="text-slate-400 text-xs mt-1">No errors allowed. High pressure.</p>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="startSession('survival', 10)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">10Q</button>
+                                    <button onclick="startSession('survival', 30)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">30Q</button>
+                                    <button onclick="startSession('survival', 70)" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 rounded-xl text-[10px] font-bold uppercase">Gauntlet</button>
+                                </div>
+                            </div>
+
+                            <div class="p-6 bg-indigo-600 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                <div>
+                                    <h3 class="font-bold text-lg flex items-center gap-2">Battle Bot <span class="text-yellow-400 text-sm">🤖</span></h3>
+                                    <p class="text-indigo-200 text-xs mt-1">Turn-based knowledge combat.</p>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="startSession('battle', 'easy')" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">Standard</button>
+                                    <button onclick="startSession('battle', 'hard')" class="flex-1 py-2 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-[10px] font-bold uppercase">Elite</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BATTLE ARENA -->
+                    <div id="battle-ui" class="hidden fade-in space-y-6 mb-8 mt-4 relative">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div id="bot-card" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 text-center relative overflow-visible">
+                                <div id="bot-speech" class="speech-bubble hidden">Beep Boop!</div>
+                                <div class="text-3xl mb-2">👾</div>
+                                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-1">
+                                    <div id="bot-hp-bar" class="hp-bar bg-rose-500 h-full w-full"></div>
+                                </div>
+                                <p id="bot-hp-text" class="text-[10px] text-slate-400 font-bold uppercase">Bot: 100%</p>
+                            </div>
+                            <div id="player-card" class="bg-white p-5 rounded-2xl border border-slate-200 text-center shadow-sm relative overflow-visible">
+                                <div class="text-3xl mb-2">🧑‍🚀</div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-1">
+                                    <div id="player-hp-bar" class="hp-bar bg-emerald-500 h-full w-full"></div>
+                                </div>
+                                <p id="player-hp-text" class="text-[10px] text-slate-500 font-bold uppercase">User: 100%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUIZ CONTENT -->
+                    <div id="quiz-ui" class="hidden fade-in space-y-8">
+                        <div id="q-header" class="space-y-3">
+                            <span id="q-tag" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-black uppercase tracking-widest border border-indigo-100">Physics Core</span>
+                            <h2 id="q-text" class="text-2xl font-extrabold text-slate-900 leading-tight"></h2>
+                        </div>
+                        <div id="options-box" class="grid grid-cols-1 gap-3"></div>
+                        <div id="battle-actions" class="hidden grid grid-cols-3 gap-3">
+                            <button onclick="performCombat('attack')" id="atk-btn" class="flex flex-col items-center p-4 bg-rose-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                <span class="text-xl">💥</span>
+                                <span class="text-[9px] font-black uppercase mt-1">Attack</span>
+                                <span class="text-[8px] font-bold opacity-80">(20 NRG)</span>
+                            </button>
+                            <button onclick="performCombat('heal')" id="heal-btn" class="flex flex-col items-center p-4 bg-emerald-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                <span class="text-xl">🧪</span>
+                                <span class="text-[9px] font-black uppercase mt-1">Heal</span>
+                                <span class="text-[8px] font-bold opacity-80">(15 NRG)</span>
+                            </button>
+                            <button onclick="performCombat('shield')" id="shd-btn" class="flex flex-col items-center p-4 bg-indigo-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                <span class="text-xl">🛡️</span>
+                                <span class="text-[9px] font-black uppercase mt-1">Shield</span>
+                                <span class="text-[8px] font-bold opacity-80">(10 NRG)</span>
+                            </button>
+                        </div>
+                        <div id="flash-box" class="hidden space-y-6">
+                            <div class="p-8 bg-indigo-600 rounded-3xl text-white shadow-xl">
+                                <p id="flash-ans" class="text-xl font-bold"></p>
+                                <p id="flash-exp" class="mt-4 pt-4 border-t border-white/10 text-indigo-200 text-sm italic"></p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="flashResult(false)" class="p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-400">Needs Review</button>
+                                <button onclick="flashResult(true)" class="p-4 bg-emerald-500 rounded-xl font-bold text-white shadow-lg">Nailed It</button>
+                            </div>
+                        </div>
+                        <div id="feedback-box" class="hidden p-6 rounded-2xl border flex gap-4 fade-in">
+                            <div id="fb-icon" class="text-2xl"></div>
+                            <div>
+                                <p id="fb-status" class="font-black text-[10px] uppercase mb-1"></p>
+                                <p id="fb-text" class="text-sm text-slate-600"></p>
+                            </div>
+                        </div>
+                        <button id="main-btn" onclick="handleMainAction()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase shadow-xl hover:bg-indigo-600 transition-colors">Check Response</button>
+                    </div>
+
+                    <!-- SUMMARY -->
+                    <div id="summary-ui" class="hidden fade-in text-center py-10">
+                        <div id="sum-icon" class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">🏆</div>
+                        <h2 class="text-3xl font-black text-slate-900 mb-2">Protocol Complete</h2>
+                        <p id="sum-text" class="text-slate-500 mb-8"></p>
+                        <div class="grid grid-cols-1 gap-4 mb-8 max-w-sm mx-auto">
+                            <div class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Final Score</p><p id="sum-score" class="text-2xl font-black text-indigo-600">0/0</p></div>
+                            <div id="sum-pct-wrap" class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Accuracy</p><p id="sum-pct" class="text-2xl font-black text-indigo-600">0%</p></div>
+                        </div>
+                        <button onclick="resetToMenu()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase">Return to Main Menu</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+const QUESTIONS = [
+    { q: "State the function of the moderator in a nuclear fission reactor.", a: "To slow down fast-moving neutrons so they can be captured by uranium-235.", options: ["To absorb excess neutrons to stop the reaction.", "To slow down fast-moving neutrons so they can be captured by uranium-235.", "To cool the reactor core to prevent a meltdown.", "To provide the high pressure needed for fusion to occur."], f: "The moderator (such as graphite) slows neutrons released during fission. This is necessary because slow neutrons are more easily captured by U-235 nuclei to sustain the chain reaction." },
+    { q: "Explain the role of control rods in a nuclear reactor.", a: "They absorb neutrons to ensure only one neutron per fission causes further fission.", options: ["They slow down neutrons to ensure fission occurs.", "They shield the environment from gamma radiation.", "They absorb neutrons to ensure only one neutron per fission causes further fission.", "They accelerate protons to hit the uranium fuel rods."], f: "Control rods (made of boron) absorb neutrons. By raising or lowering them, the rate of reaction is controlled so that, on average, each fission leads to only one further fission, preventing an uncontrolled chain reaction." },
+    { q: "Identify the correct nuclear symbol for a neutron used in balancing equations.", a: "₀¹n", options: ["₁¹p", "₋₁⁰e", "₀¹n", "₂⁴α"], f: "A neutron has a nucleon number (mass) of 1 and a proton number (charge) of 0. Using a capital 'N' or incorrect numbers is a common examiner-noted error." },
+    { q: "Define what is meant by the term isotopes.", a: "Atoms of the same element with the same number of protons but different numbers of neutrons.", options: ["Atoms of different elements with the same number of neutrons.", "Atoms of the same element with the same number of protons but different numbers of neutrons.", "Atoms with unstable nuclei that emit radiation.", "Atoms that have lost electrons to become charged."], f: "Isotopes are atoms of the same element (same proton number) but they have different numbers of neutrons, resulting in different mass or nucleon numbers." },
+    { q: "Explain why alpha radiation is used in smoke detectors.", a: "It is easily blocked by smoke particles, stopping the current and triggering the alarm.", options: ["It is highly penetrating and passes through smoke.", "It has a very short half-life and decays away quickly.", "It is easily blocked by smoke particles, stopping the current and triggering the alarm.", "It is a natural source of background radiation found in rocks."], f: "Alpha radiation is poorly penetrating. Smoke particles block the alpha particles, which causes the ionisation current in the detector to drop, triggering the alarm." },
+    { q: "State what an alpha particle consists of.", a: "A helium nucleus consisting of 2 protons and 2 neutrons.", options: ["A high-speed electron.", "An electromagnetic wave.", "A helium nucleus consisting of 2 protons and 2 neutrons.", "A single proton and a single neutron."], f: "An alpha particle is a helium nucleus. It does not contain electrons; calling it a 'helium atom' is scientifically incorrect." },
+    { q: "Identify the nature of beta radiation.", a: "A fast-moving electron emitted from the nucleus.", options: ["A high-energy electromagnetic wave.", "A fast-moving electron emitted from the nucleus.", "A helium nucleus.", "A slow-moving neutron."], f: "Beta radiation consists of high-energy, high-speed electrons. These are emitted when a neutron in the nucleus turns into a proton." },
+    { q: "Describe the nature of gamma radiation.", a: "A high-frequency electromagnetic wave.", options: ["A positively charged particle.", "A particle with a mass of 4.", "A high-frequency electromagnetic wave.", "A fast-moving proton."], f: "Gamma radiation is electromagnetic radiation. It has no mass and no charge, making it highly penetrating as it does not ionise atoms as easily as alpha or beta." },
+    { q: "Describe the process of nuclear fission in U-235.", a: "A heavy nucleus captures a slow neutron and splits into two lighter nuclei and excess neutrons.", options: ["Two light nuclei join together to form a heavier nucleus.", "A heavy nucleus captures a slow neutron and splits into two lighter nuclei and excess neutrons.", "A nucleus emits an alpha particle to become more stable.", "A star expands to become a red giant."], f: "Fission involves a heavy nucleus (like U-235) capturing a slow neutron, becoming unstable, and splitting into smaller 'fission fragments,' releasing energy and more neutrons." },
+    { q: "Identify a natural source of background radiation.", a: "Radon gas from rocks.", options: ["Medical X-rays.", "Radioactive waste from power stations.", "Radon gas from rocks.", "Fallout from nuclear weapons testing."], f: "Radon gas is a natural source that originates from rocks, particularly granite. X-rays and power stations are artificial sources." },
+    { q: "State which piece of evidence supports the Big Bang theory by filling all of space.", a: "Cosmic Microwave Background Radiation (CMBR).", options: ["Cosmological red shift.", "Cosmic Microwave Background Radiation (CMBR).", "The existence of black holes.", "The presence of helium in the Sun."], f: "CMBR is high-energy radiation produced shortly after the Big Bang that has been stretched into microwaves as space expanded." },
+    { q: "Describe the effect known as cosmological red shift.", a: "The wavelength of light from distant galaxies increases as space expands.", options: ["Light from galaxies moving toward us is stretched.", "The wavelength of light from distant galaxies increases as space expands.", "Stars turn red as they cool down to become white dwarfs.", "Light is absorbed by gas atoms in the star's atmosphere."], f: "Cosmological red shift occurs because the space between galaxies is stretching. Light travelling through this expanding space is stretched to longer wavelengths." },
+    { q: "Identify the next stage in the life cycle of our Sun after the main sequence.", a: "Red Giant.", options: ["Supernova.", "Red Supergiant.", "Red Giant.", "Black Hole."], f: "For stars of a similar mass to our Sun, the next stage is a Red Giant. Red Supergiants only form from stars with much higher masses." },
+    { q: "Determine the final stage of a high-mass star (much larger than our Sun).", a: "Neutron Star or Black Hole.", options: ["White Dwarf.", "Black Dwarf.", "Neutron Star or Black Hole.", "Main Sequence Star."], f: "High-mass stars end their lives in a supernova explosion, leaving behind an incredibly dense neutron star or a black hole." },
+    { q: "Explain why a star in the main sequence is stable.", a: "Inward gravitational forces are balanced by outward gas and radiation pressure.", options: ["Because it is made of solid rock.", "Inward gravitational forces are balanced by outward gas and radiation pressure.", "It has run out of hydrogen fuel.", "It is moving away from the centre of the galaxy."], f: "Stability is maintained because the inward pull of gravity is exactly balanced by the outward pressure generated by nuclear fusion in the core." },
+    { q: "State how our Solar System originated.", a: "From the collapse of a cloud of gas and dust due to gravity.", options: ["From a supernova explosion alone.", "From the collapse of a cloud of gas and dust due to gravity.", "From a collision between two galaxies.", "From the expansion of a single star."], f: "The Solar System formed when a cloud of gas and dust collapsed under its own gravity." },
+    { q: "Identify where heavy elements (heavier than iron) are produced.", a: "During a supernova explosion.", options: ["During the main sequence of a Sun-sized star.", "Inside a red giant.", "During a supernova explosion.", "In a nuclear fission reactor."], f: "Extreme energy and temperatures of a supernova explosion provide the conditions necessary to fuse elements heavier than iron." },
+    { q: "On an H-R diagram, where would the hottest stars be located?", a: "On the far left.", options: ["On the far right.", "At the bottom.", "On the far left.", "In the centre."], f: "The horizontal axis of an H-R diagram represents surface temperature, which increases towards the left." },
+    { q: "On an H-R diagram, where are white dwarfs typically found?", a: "Bottom left (hot and dim).", options: ["Top left (hot and bright).", "Top right (cool and bright).", "Bottom left (hot and dim).", "Bottom right (cool and dim)."], f: "White dwarfs are the hot, remaining cores of stars, but they are very small (low luminosity), appearing in the bottom-left." },
+    { q: "Define the unit light year.", a: "The distance light travels in one year.", options: ["The time it takes for light to orbit the Sun.", "The distance light travels in one year.", "The brightness of a star compared to the Sun.", "The age of the Universe."], f: "A light year is a unit of distance, representing how far light travels through a vacuum in one year." },
+    { q: "State Newton’s First Law of motion.", a: "An object remains at rest or in uniform motion unless acted upon by an external resultant force.", options: ["Force equals mass times acceleration.", "For every action, there is an equal and opposite reaction.", "An object remains at rest or in uniform motion unless acted upon by an external resultant force.", "Momentum is always conserved in a collision."], f: "If the resultant force is zero, an object’s velocity will not change." },
+    { q: "State which physical quantity is an expression of the inertia of a body.", a: "Mass.", options: ["Weight.", "Velocity.", "Mass.", "Acceleration."], f: "Mass is a measure of an object’s resistance to a change in its motion (inertia)." },
+    { q: "Identify the correct form of Newton’s Second Law.", a: "F=ma", options: ["W=mg", "F=ma", "p=mv", "M=Fd"], f: "Newton’s Second Law states that the resultant force on an object is proportional to its mass and the acceleration produced." },
+    { q: "State Newton’s Third Law of motion.", a: "If body A exerts a force on body B, body B exerts an equal and opposite force on body A.", options: ["Forces always cause objects to accelerate.", "If body A exerts a force on body B, body B exerts an equal and opposite force on body A.", "The total momentum before a collision equals the total momentum after.", "Energy cannot be created or destroyed."], f: "Newton’s Third Law describes interaction pairs; these forces must be equal in size, opposite in direction, and act on different objects." },
+    { q: "Explain the forces acting on a skydiver at terminal speed.", a: "Weight and air resistance are balanced (equal and opposite).", options: ["Weight is greater than air resistance.", "Air resistance is zero.", "Weight and air resistance are balanced (equal and opposite).", "The skydiver is accelerating at 10 m/s²."], f: "At terminal speed, air resistance has increased to match the weight. The resultant force is zero." },
+    { q: "Explain how an airbag reduces the force on a passenger.", a: "It increases the time and distance over which the passenger comes to rest.", options: ["It decreases the mass of the passenger.", "It increases the time and distance over which the passenger comes to rest.", "It increases the deceleration of the passenger.", "It prevents the passenger from moving at all."], f: "By increasing the distance or time of the stop, the rate of change of momentum is reduced, resulting in a smaller force." },
+    { q: "Calculate the resultant force on a car if a forward engine force of 5000 N is opposed by 2000 N of air resistance.", a: "3000 N", options: ["7000 N", "3000 N", "10 000 N", "2.5 N"], f: "Resultant force is 5000 N - 2000 N = 3000 N forward." },
+    { q: "State what is represented by the gradient of a velocity-time graph.", a: "Acceleration.", options: ["Distance travelled.", "Displacement.", "Acceleration.", "Resultant force."], f: "The steepness of the line on a velocity-time graph indicates acceleration." },
+    { q: "State what is represented by the area under a velocity-time graph.", a: "Distance travelled.", options: ["Acceleration.", "Resultant force.", "Distance travelled.", "Speed."], f: "Calculating the area under the line on a velocity-time graph gives the total distance moved." },
+    { q: "Identify the correct unit of acceleration.", a: "m/s²", options: ["m/s", "m/s²", "N/kg", "kg m/s"], f: "Acceleration is m/s per second, resulting in m/s²." },
+    { q: "State the two components of overall stopping distance.", a: "Thinking distance and braking distance.", options: ["Thinking distance and reaction time.", "Thinking distance and braking distance.", "Braking distance and road conditions.", "Velocity and acceleration."], f: "Stopping distance = thinking distance + braking distance." },
+    { q: "Identify a factor that increases thinking distance.", a: "Increased reaction time (e.g., tiredness or phone use).", options: ["Wet roads.", "Worn tyre treads.", "Increased reaction time (e.g., tiredness or phone use).", "Icy patches on the road."], f: "Tiredness or distractions increase reaction time, thus increasing thinking distance." },
+    { q: "Explain why braking distance increases on a wet road.", a: "Friction between the tyres and the road is reduced.", options: ["The driver takes longer to see the hazard.", "Friction between the tyres and the road is reduced.", "The car has more kinetic energy on wet roads.", "The driver’s reaction time increases."], f: "Braking distance depends on friction. Wet conditions reduce this grip." },
+    { q: "State the condition required for the law of conservation of momentum to apply.", a: "No external resultant forces act on the system.", options: ["The collision must be elastic.", "No external resultant forces act on the system.", "The objects must be travelling at the same speed.", "Kinetic energy must be conserved."], f: "Momentum is conserved provided no external resultant forces act." },
+    { q: "Calculate the momentum of a 0.5 kg object moving at 10 m/s.", a: "5.0 kg m/s", options: ["5.0 kg m/s", "20 kg m/s", "0.05 kg m/s", "5.0 J"], f: "Momentum = m × v. 0.5 × 10 = 5.0 kg m/s." },
+    { q: "In an inelastic collision, what happens to the kinetic energy?", a: "Some is transferred to other forms like heat or sound.", options: ["It is perfectly conserved.", "It increases as the objects stick together.", "Some is transferred to other forms like heat or sound.", "It all disappears."], f: "In inelastic collisions, KE is transferred to heat, sound, or deformation." },
+    { q: "State the condition for a beam to be in equilibrium according to the principle of moments.", a: "The sum of clockwise moments must equal the sum of anticlockwise moments.", options: ["Total forces must be zero only.", "The sum of clockwise moments must equal the sum of anticlockwise moments.", "The pivot must be at the exact centre.", "The weight of the beam must be 10 N."], f: "For balance, total turning effect in one direction must balance the other." },
+    { q: "Identify the correct unit for the moment of a force.", a: "Newton-metre (Nm)", options: ["Newton (N)", "Joule (J)", "Newton-metre (Nm)", "Pascal (Pa)"], f: "Moment = force (N) × distance (m), so the unit is Nm." },
+    { q: "Calculate the work done when a force of 20 N moves an object 5 m.", a: "100 J", options: ["4 J", "100 J", "100 N", "0.25 J"], f: "Work done = force × distance. 20 × 5 = 100 Joules." },
+    { q: "State the two factors that determine an object’s kinetic energy.", a: "Mass and velocity.", options: ["Mass and height.", "Mass and velocity.", "Force and distance.", "Weight and acceleration."], f: "Kinetic energy = ½mv²." },
+    { q: "Define the term half-life.", a: "The time taken for the activity or number of radioactive nuclei to halve.", options: ["Half the time it takes for a nucleus to decay.", "The time taken for the activity or number of radioactive nuclei to halve.", "The time it takes for radiation to become safe.", "50 years for any radioactive substance."], f: "Half-life is the time for a sample's activity to reduce by 50%." },
+    { q: "When a nucleus undergoes beta decay, what happens to the proton number?", a: "It increases by 1.", options: ["It decreases by 1.", "It stays the same.", "It increases by 1.", "It decreases by 2."], f: "In beta decay, a neutron turns into a proton, increasing the proton number by 1." },
+    { q: "When a nucleus undergoes alpha decay, what happens to the nucleon number?", a: "It decreases by 4.", options: ["It decreases by 4.", "It decreases by 2.", "It stays the same.", "It increases by 4."], f: "An alpha particle has 4 nucleons, so the nucleus loses 4 in its nucleon number." },
+    { q: "Identify the least penetrating type of radiation.", a: "Alpha.", options: ["Alpha.", "Beta.", "Gamma.", "X-rays."], f: "Alpha particles are large and easily stopped by paper or air." },
+    { q: "Identify the most penetrating type of radiation.", a: "Gamma.", options: ["Alpha.", "Beta.", "Gamma.", "X-rays."], f: "Gamma radiation is an EM wave and requires thick lead to stop." },
+    { q: "State which material is best for shielding a scientist from gamma radiation.", a: "Thick lead.", options: ["Paper.", "Thin aluminium.", "Thick lead.", "Plastic."], f: "Dense materials like lead are required to reduce gamma radiation intensity." },
+    { q: "Explain why nuclear fusion is difficult to achieve on Earth.", a: "Extremely high temperatures and pressures are needed to overcome electrostatic repulsion between nuclei.", options: ["The fuel is very rare.", "Extremely high temperatures and pressures are needed to overcome electrostatic repulsion between nuclei.", "It produces too much carbon dioxide.", "It is an uncontrolled chain reaction."], f: "Positive nuclei repel each other. Massive kinetic energy (heat/pressure) is needed to force them together." },
+    { q: "Identify the main process that powers main sequence stars.", a: "Nuclear fusion of hydrogen into helium.", options: ["Nuclear fission of uranium.", "Burning of hydrogen gas.", "Nuclear fusion of hydrogen into helium.", "Alpha decay of heavy elements."], f: "Main sequence stars fuse hydrogen into helium in their cores." },
+    { q: "Explain why a large number of dice is used to model radioactive decay.", a: "Radioactive decay is random; a large sample smooths out fluctuations in data.", options: ["To make the experiment last longer.", "Radioactive decay is random; a large sample smooths out fluctuations in data.", "To ensure that every dice eventually 'decays'.", "To represent the different isotopes."], f: "Decay is random, so larger samples provide more reliable statistical trends." },
+    { q: "State the origin of radon gas.", a: "Radioactive decay of uranium in rocks like granite.", options: ["Leakage from nuclear power stations.", "Cosmic rays from space.", "Radioactive decay of uranium in rocks like granite.", "Carbon-14 in the atmosphere."], f: "Radon seeps from the ground due to uranium decay in certain rocks." },
+    { q: "Identify the rocky (terrestrial) planets in our Solar System.", a: "Mercury, Venus, Earth, Mars.", options: ["Jupiter, Saturn, Uranus, Neptune.", "Mercury, Venus, Earth, Mars.", "Earth, Moon, Mars, Asteroids.", "Sun, Mercury, Venus, Earth."], f: "The four inner planets are rocky; the four outer are gas giants." },
+    { q: "State the location of the asteroid belt.", a: "Between Mars and Jupiter.", options: ["Between Earth and Mars.", "Between Mars and Jupiter.", "Beyond Neptune.", "Around the Sun’s core."], f: "The asteroid belt is between the orbits of Mars and Jupiter." },
+    { q: "Describe the orbit of a comet.", a: "A highly elliptical orbit that takes it far out of the Solar System.", options: ["A perfect circle close to the Sun.", "A highly elliptical orbit that takes it far out of the Solar System.", "It orbits the Earth like the Moon.", "It stays fixed in one position in space."], f: "Comets have elongated elliptical orbits." },
+    { q: "Explain what Hubble’s measurements of distant galaxies revealed.", a: "The further away a galaxy is, the faster it is receding (moving away).", options: ["All galaxies are moving toward us.", "The further away a galaxy is, the faster it is receding (moving away).", "All stars have the same chemical composition.", "The Universe is shrinking."], f: "Hubble's Law shows galaxies move away faster the further away they are." },
+    { q: "Describe the change in the Big Bang radiation over time.", a: "It has been stretched from short-wavelength gamma rays to long-wavelength microwaves.", options: ["It has become shorter wavelength gamma rays.", "It has stayed exactly the same.", "It has been stretched from short-wavelength gamma rays to long-wavelength microwaves.", "It has disappeared."], f: "Space expansion stretched early gamma rays into microwaves (CMBR)." },
+    { q: "Explain how absorption lines are formed in a star's spectrum.", a: "Gas atoms in the star's atmosphere absorb specific wavelengths of light.", options: ["The star is moving away from us.", "Gas atoms in the star's atmosphere absorb specific wavelengths of light.", "The star is cooling down.", "Light is reflected off the surface of planets."], f: "Cooler outer layers of stars absorb specific frequencies, creating dark lines." },
+    { q: "State the equation for gravitational potential energy (GPE).", a: "GPE=mgh", options: ["GPE=½mv²", "GPE=mgh", "GPE=Fd", "GPE=ma"], f: "GPE = mass × gravity × height." },
+    { q: "Calculate the spring constant if a 5 N force causes an extension of 0.04 m.", a: "125 N/m", options: ["0.2 N/m", "125 N/m", "20 N/m", "5.04 N/m"], f: "F=kx -> k=F/x. 5 / 0.04 = 125 N/m." },
+    { q: "What does a straight line through the origin on a force-extension graph represent?", a: "Extension is directly proportional to force (obeying Hooke’s Law).", options: ["The spring has exceeded its elastic limit.", "Extension is directly proportional to force (obeying Hooke’s Law).", "The spring is made of rubber.", "No work is being done."], f: "A straight line through the origin proves proportionality (Hooke's Law)." },
+    { q: "State the principle of conservation of energy for a falling object (ignoring air resistance).", a: "Loss in GPE = Gain in KE.", options: ["Kinetic energy is always zero.", "Loss in GPE = Gain in KE.", "Potential energy always stays the same.", "Work done is always 100 J."], f: "GPE transfers into KE as an object falls." },
+    { q: "Explain the advantage of repeating readings in an experiment.", a: "It allows anomalies (outliers) to be identified and ignored when calculating a mean.", options: ["It eliminates all errors.", "It allows anomalies (outliers) to be identified and ignored when calculating a mean.", "It makes the stopwatch more accurate.", "It changes the independent variable."], f: "Repeating lets you spot outliers and calculate a more reliable average." },
+    { q: "State the formula for calculating uncertainty from a set of results.", a: "½(Maximum value − Minimum value)", options: ["Mean / 2", "½(Maximum value − Minimum value)", "Mean × 100", "Maximum + Minimum"], f: "Uncertainty is half the range of repeat readings." },
+    { q: "Define the term reproducible.", a: "Different people or groups get similar results using different equipment or methods.", options: ["The same person gets the same results again.", "Different people or groups get similar results using different equipment or methods.", "The experiment is done very quickly.", "The results are plotted on a graph."], f: "Reproducible means others can get the same result with different setups." },
+    { q: "Explain how a seatbelt protects a driver using Newton’s First Law.", a: "The driver has inertia and would continue moving forward; the seatbelt provides the external force to stop them.", options: ["It increases the mass of the driver.", "The driver has inertia and would continue moving forward; the seatbelt provides the external force to stop them.", "It absorbs the energy of the engine.", "It makes the car stop faster."], f: "Due to inertia, the driver keeps moving. The belt provides the external force to stop them." },
+    { q: "Explain how crumple zones help using Newton’s Second Law.", a: "They increase the time for the change in momentum, reducing the resultant force.", options: ["They make the car heavier.", "They decrease the time of the collision.", "They increase the time for the change in momentum, reducing the resultant force.", "They increase the final velocity of the car."], f: "Increasing impact time reduces the rate of change of momentum (force)." },
+    { q: "Explain why reducing the speed limit improves road safety.", a: "Both thinking and braking distances are significantly reduced at lower speeds.", options: ["Lower speeds give the driver more time to think.", "Both thinking and braking distances are significantly reduced at lower speeds.", "It makes car engines more efficient.", "It prevents any anomalies in driving."], f: "Lower speed means shorter thinking and braking distances." },
+    { q: "Define the term terminal speed.", a: "The maximum constant speed reached by a falling object when forces are balanced.", options: ["The speed of a car at the end of its journey.", "The maximum constant speed reached by a falling object when forces are balanced.", "The speed of light.", "The speed at which an object starts to melt."], f: "Terminal speed occurs when drag matches weight (zero acceleration)." },
+    { q: "On average, how many neutrons are released in the fission of a U-235 nucleus?", a: "3", options: ["1", "3", "10", "0"], f: "Fission typically releases 2 or 3 neutrons." },
+    { q: "Compare the energy released by fusion and fission.", a: "Fusion releases more energy per kilogram of fuel.", options: ["Fission releases more energy per kilogram of fuel.", "They release the same amount of energy.", "Fusion releases more energy per kilogram of fuel.", "Neither releases energy."], f: "Fusion is much more energy-dense than fission per kg of fuel." },
+    { q: "Identify why Pluto is now classified as a dwarf planet.", a: "Its mass and diameter are extremely small, even smaller than the Moon.", options: ["It has no gravity.", "It is too far from the Sun.", "Its mass and diameter are extremely small, even smaller than the Moon.", "It does not orbit the Sun."], f: "Pluto's small size and mass led to its reclassification as a dwarf planet." }
+];
+
+const BOT_TAUNTS = [
+    "I'm more stable than a main sequence star!",
+    "Your brain needs a moderator—it's too fast!",
+    "My circuits are 100% renewable. Are yours?",
+    "I have more potential energy than you!",
+    "Is that your final answer, or just background radiation?",
+    "You're falling for my trap at terminal velocity!",
+    "I'm feeling very alpha today. High ionising power!",
+    "That was less effective than a paper shield!",
+    "You're like Pluto—hardly a threat!",
+    "My logic is as dense as a neutron star!",
+    "Error 404: Skill not found!",
+    "You're radiating a lot of wrong answers!",
+    "Don't split your focus like a U-235 nucleus!"
+];
+
+let state = {
+    mode: '', limit: 0, currentIndex: 0, activeSet: [], results: [], answered: false, selected: null,
+    playerHP: 100, botHP: 100, charge: 0, shielded: false, processingTurn: false
+};
+
+const AudioSys = {
+    ctx: null,
+    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+    play(freq, type, dur, sweep = 0) {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if(sweep) o.frequency.exponentialRampToValueAtTime(sweep, this.ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+    },
+    correct() { this.play(440, 'sine', 0.3, 880); },
+    wrong() { this.play(150, 'sawtooth', 0.4, 60); },
+    atk() { this.play(600, 'square', 0.2, 50); },
+    botAtk() { this.play(200, 'sawtooth', 0.3, 80); },
+    heal() { this.play(300, 'sine', 0.5, 900); },
+    shd() { this.play(200, 'sine', 0.3, 220); },
+    hit() { this.play(80, 'triangle', 0.2, 40); }
+};
+
+function startSession(mode, val) {
+    state.mode = mode; state.currentIndex = 0; state.results = []; state.playerHP = 100; state.botHP = 100; state.charge = 0; state.shielded = false;
+    if(mode === 'standard') { state.limit = 20; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 20); }
+    else if(mode === 'flashcard') { state.limit = 70; state.activeSet = [...QUESTIONS]; }
+    else if(mode === 'survival') { state.limit = val; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, val); }
+    else { state.limit = 70; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()); }
+    state.results = new Array(state.limit).fill(null);
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('sidebar-empty').classList.add('hidden');
+    document.getElementById('sidebar-active-content').classList.remove('hidden');
+    document.getElementById('mob-stats').classList.remove('hidden');
+    document.getElementById('quiz-ui').classList.remove('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    if(mode === 'battle') {
+        document.getElementById('battle-ui').classList.remove('hidden');
+        document.getElementById('battle-sidebar-stats').classList.remove('hidden');
+        document.getElementById('prog-label').textContent = "Battle Stage";
+    }
+    buildNav(); updateProg(); renderQ();
+}
+
+function buildNav() {
+    const grid = document.getElementById('nav-grid'); grid.innerHTML = '';
+    const isSelectable = (state.mode === 'standard' || state.mode === 'flashcard');
+    for(let i=0; i<state.limit; i++) {
+        const d = document.createElement('div');
+        d.id = `nav-${i}`; d.className = `nav-dot bg-slate-100 text-slate-400 ${isSelectable ? 'selectable' : ''}`;
+        d.textContent = i + 1;
+        if(isSelectable) d.onclick = () => jumpTo(i);
+        grid.appendChild(d);
+    }
+}
+
+function jumpTo(i) { state.currentIndex = i; updateProg(); renderQ(); }
+
+function updateProg() {
+    const done = state.results.filter(r => r !== null).length;
+    const pct = (done / state.limit) * 100;
+    document.getElementById('side-current').textContent = done;
+    document.getElementById('side-total').textContent = state.limit;
+    document.getElementById('side-bar').style.width = pct + '%';
+    document.getElementById('mob-prog-text').textContent = `${state.currentIndex+1}/${state.limit}`;
+    state.results.forEach((r, i) => {
+        const dot = document.getElementById(`nav-${i}`); if(!dot) return;
+        let c = "nav-dot ";
+        if(i === state.currentIndex) c += "ring-2 ring-indigo-500 ";
+        if(r === 'correct') c += "bg-emerald-500 text-white ";
+        else if(r === 'wrong') c += "bg-rose-500 text-white ";
+        else c += "bg-slate-100 text-slate-400 ";
+        dot.className = c + ((state.mode==='standard'||state.mode==='flashcard') ? 'selectable' : '');
+    });
+    if(state.mode === 'battle') {
+        document.getElementById('side-charge').textContent = state.charge;
+        document.getElementById('side-charge-bar').style.width = state.charge + '%';
+        document.getElementById('bot-hp-bar').style.width = state.botHP + '%';
+        document.getElementById('player-hp-bar').style.width = state.playerHP + '%';
+        document.getElementById('bot-hp-text').textContent = `Bot: ${Math.max(0, state.botHP)}%`;
+        document.getElementById('player-hp-text').textContent = `User: ${Math.max(0, state.playerHP)}%`;
+    }
+}
+
+function renderQ() {
+    const q = state.activeSet[state.currentIndex]; state.answered = false; state.selected = null;
+    document.getElementById('q-text').textContent = q.q;
+    document.getElementById('feedback-box').classList.add('hidden');
+    document.getElementById('battle-actions').classList.add('hidden');
+    document.getElementById('main-btn').classList.remove('hidden');
+    document.getElementById('main-btn').textContent = state.mode === 'flashcard' ? "Reveal Answer" : "Check Response";
+    const opts = document.getElementById('options-box'); opts.innerHTML = '';
+    if(state.mode === 'flashcard') { opts.classList.add('hidden'); document.getElementById('flash-box').classList.add('hidden'); }
+    else {
+        opts.classList.remove('hidden'); document.getElementById('flash-box').classList.add('hidden');
+        q.options.forEach(o => {
+            const b = document.createElement('button');
+            b.className = "option-btn p-4 rounded-xl border-2 border-slate-100 bg-white text-left text-sm font-medium";
+            b.textContent = o;
+            b.onclick = () => {
+                if(state.answered) return;
+                document.querySelectorAll('.option-btn').forEach(btn => btn.classList.replace('border-indigo-500','border-slate-100'));
+                b.classList.replace('border-slate-100','border-indigo-500'); state.selected = o;
+            };
+            opts.appendChild(b);
+        });
+    }
+}
+
+function handleMainAction() {
+    const q = state.activeSet[state.currentIndex];
+    if(state.mode === 'flashcard') {
+        document.getElementById('flash-box').classList.remove('hidden');
+        document.getElementById('flash-ans').textContent = q.a;
+        document.getElementById('flash-exp').textContent = q.f;
+        document.getElementById('main-btn').classList.add('hidden'); return;
+    }
+    if(!state.selected || state.answered) { if(state.answered) next(); return; }
+    const isCorrect = state.selected === q.a; state.answered = true;
+    state.results[state.currentIndex] = isCorrect ? 'correct' : 'wrong';
+    if(isCorrect) AudioSys.correct(); else AudioSys.wrong();
+    const fb = document.getElementById('feedback-box'); fb.classList.remove('hidden');
+    fb.className = `p-6 rounded-2xl border flex gap-4 ${isCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`;
+    document.getElementById('fb-status').textContent = isCorrect ? "Validated" : "Error";
+    document.getElementById('fb-text').textContent = q.f;
+    document.getElementById('fb-icon').textContent = isCorrect ? "✅" : "❌";
+    document.querySelectorAll('.option-btn').forEach(b => {
+        if(b.textContent === q.a) b.className = "option-btn p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold text-left text-sm";
+        else if(b.textContent === state.selected && !isCorrect) b.className = "option-btn p-4 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold text-left text-sm";
+        else b.classList.add('opacity-40');
+    });
+    if(state.mode === 'survival' && !isCorrect) document.getElementById('main-btn').textContent = "View Results";
+    else if(state.mode === 'battle') { if(isCorrect) state.charge = Math.min(100, state.charge + 25); document.getElementById('main-btn').textContent = "Execute Action"; updateProg(); }
+    else document.getElementById('main-btn').textContent = "Next Objective";
+}
+
+function flashResult(knew) { state.results[state.currentIndex] = knew ? 'correct' : 'wrong'; if(knew) AudioSys.correct(); else AudioSys.wrong(); next(); }
+
+function next() {
+    if(state.mode === 'battle') {
+        document.getElementById('options-box').classList.add('hidden');
+        document.getElementById('feedback-box').classList.add('hidden');
+        document.getElementById('main-btn').classList.add('hidden');
+        document.getElementById('battle-actions').classList.remove('hidden');
+        document.getElementById('atk-btn').disabled = state.charge < 20;
+        document.getElementById('heal-btn').disabled = state.charge < 15;
+        document.getElementById('shd-btn').disabled = state.charge < 10;
+        return;
+    }
+    if(state.mode === 'survival' && state.results[state.currentIndex] === 'wrong') { showSum(); return; }
+    if(state.currentIndex < state.limit - 1) { state.currentIndex++; updateProg(); renderQ(); }
+    else showSum();
+}
+
+function spawnDamage(parent, text, color) {
+    const p = document.createElement('div');
+    p.className = `damage-pop text-xl ${color}`;
+    p.textContent = text;
+    p.style.left = '50%';
+    parent.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+}
+
+function showTaunt() {
+    const bubble = document.getElementById('bot-speech');
+    bubble.textContent = BOT_TAUNTS[Math.floor(Math.random() * BOT_TAUNTS.length)];
+    bubble.classList.remove('hidden');
+    setTimeout(() => bubble.classList.add('hidden'), 2200);
+}
+
+function performCombat(type) {
+    if(state.processingTurn) return;
+    state.processingTurn = true;
+    
+    if(type === 'attack') { 
+        state.botHP -= 25; state.charge -= 20; AudioSys.atk(); 
+        spawnDamage(document.getElementById('bot-card'), "-25", "text-rose-500");
+    }
+    if(type === 'heal') { 
+        state.playerHP = Math.min(100, state.playerHP + 30); state.charge -= 15; AudioSys.heal(); 
+        spawnDamage(document.getElementById('player-card'), "+30", "text-emerald-500");
+    }
+    if(type === 'shield') { 
+        state.shielded = true; state.charge -= 10; AudioSys.shd(); 
+        spawnDamage(document.getElementById('player-card'), "🛡️ ACTIVE", "text-indigo-500");
+    }
+
+    updateProg();
+    if(state.botHP <= 0) { setTimeout(() => { showSum(); state.processingTurn = false; }, 800); return; }
+
+    setTimeout(() => {
+        showTaunt();
+        let dmg = 15;
+        if(state.shielded) { dmg = 3; state.shielded = false; }
+        state.playerHP -= dmg;
+        AudioSys.botAtk();
+        spawnDamage(document.getElementById('player-card'), `-${dmg}`, "text-rose-600");
+        updateProg();
+        
+        setTimeout(() => {
+            state.processingTurn = false;
+            if(state.playerHP <= 0) showSum();
+            else { state.currentIndex = (state.currentIndex + 1) % state.limit; renderQ(); }
+        }, 1200);
+    }, 1000);
+}
+
+function showSum() {
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.remove('hidden');
+    const correct = state.results.filter(r => r === 'correct').length;
+    const total = state.results.filter(r => r !== null).length;
+    document.getElementById('sum-score').textContent = `${correct}/${total}`;
+    
+    if(state.mode === 'survival') {
+        document.getElementById('sum-pct-wrap').classList.add('hidden');
+        document.getElementById('sum-text').textContent = correct === state.limit ? "Perfection! You survived the gauntlet." : "Game Over! You reached stage " + total + ".";
+    } else {
+        document.getElementById('sum-pct-wrap').classList.remove('hidden');
+        const pct = total === 0 ? 0 : Math.round((correct/total)*100);
+        document.getElementById('sum-pct').textContent = pct + '%';
+        document.getElementById('sum-text').textContent = "Great job finishing the protocol.";
+    }
+}
+
+function resetToMenu() { 
+    // Clear state
+    state.mode = '';
+    state.currentIndex = 0;
+    state.results = [];
+    state.playerHP = 100;
+    state.botHP = 100;
+    state.charge = 0;
+    state.shielded = false;
+    state.processingTurn = false;
+
+    // Reset UI visibility
+    document.getElementById('menu-screen').classList.remove('hidden');
+    document.getElementById('sidebar-empty').classList.remove('hidden');
+    document.getElementById('sidebar-active-content').classList.add('hidden');
+    document.getElementById('mob-stats').classList.add('hidden');
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    document.getElementById('battle-sidebar-stats').classList.add('hidden');
+    document.getElementById('prog-label').textContent = "Progress";
+    
+    // Clear indicators
+    document.getElementById('side-bar').style.width = '0%';
+}
+</script>
+</body>
+</html>
