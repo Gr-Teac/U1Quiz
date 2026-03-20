@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WJEC AS Unit 1 Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<div id="app" class="flex flex-col md:flex-row h-screen overflow-hidden">
+    <!-- Sidebar / Question Menu -->
+    <aside id="sidebar" class="w-full md:w-64 lg:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col h-[30%] md:h-full">
+        <div class="p-5 border-b border-slate-100 bg-white">
+            <h1 class="text-xl font-bold text-indigo-600 leading-tight">WJEC AS Unit 1</h1>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">70 Question Knowledge Bank</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50/30" id="question-list">
+            <!-- Questions injected here -->
+        </nav>
+        <div class="p-5 border-t border-slate-100 bg-white shadow-sm">
+            <div class="flex justify-between items-center text-sm font-bold text-slate-600 mb-2">
+                <span>Session Progress</span>
+                <span id="progress-text">0/20</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-10 lg:p-16">
+        <div class="max-w-3xl mx-auto">
+            <!-- Question Card -->
+            <div id="quiz-container" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 transition-all">
+                <div id="question-header" class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="question-tag" class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-indigo-100">Question 1 / 20</span>
+                        <button onclick="startNewSession()" class="flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            Shuffle New Set
+                        </button>
+                    </div>
+                    <h2 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed"></h2>
+                </div>
+
+                <div id="options-container" class="grid gap-3">
+                    <!-- Options injected here -->
+                </div>
+
+                <!-- Feedback Section -->
+                <div id="feedback-container" class="mt-8 hidden">
+                    <div id="feedback-box" class="p-5 rounded-2xl border-2 flex gap-4 items-start">
+                        <div id="feedback-icon" class="mt-1 flex-shrink-0 text-xl"></div>
+                        <div class="flex-1">
+                            <p id="feedback-status" class="font-black text-xs uppercase tracking-widest mb-1"></p>
+                            <p id="feedback-text" class="text-slate-600 text-sm leading-relaxed italic"></p>
+                        </div>
+                    </div>
+                    <button id="next-btn" class="mt-6 w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-[0.98]">Next Question</button>
+                </div>
+            </div>
+
+            <!-- Summary View -->
+            <div id="summary-container" class="hidden text-center py-12 px-4">
+                <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 mb-2">Quiz Complete!</h2>
+                <p class="text-slate-500 font-medium mb-8">You finished a session of 20 random questions.</p>
+                
+                <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-10">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Score</p>
+                        <p id="final-score" class="text-2xl font-black text-indigo-600">0/20</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Accuracy</p>
+                        <p id="final-percent" class="text-2xl font-black text-indigo-600">0%</p>
+                    </div>
+                </div>
+
+                <button onclick="startNewSession()" class="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    Start New Shuffle
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const masterQuestionBank = [
+    // BATCH 1 (1-20)
+    { q: "Identify which of the following is an essential base SI unit.", a: "Ampere", options: ["Newton", "Joule", "Ampere", "Volt"], f: "Ampere is one of the six essential SI base units; the others are kg, m, s, mol, and K." },
+    { q: "Identify the scalar quantity from the following list.", a: "Pressure", options: ["Displacement", "Velocity", "Pressure", "Force"], f: "Pressure is a scalar because it has magnitude but no specific direction; displacement, velocity, and force are vectors." },
+    { q: "State the definition of the moment of a force about a point.", a: "Force × perpendicular distance from the point", options: ["Force × distance", "Force × perpendicular distance from the point", "Mass × distance", "Force / distance"], f: "The moment is defined specifically as the force multiplied by the perpendicular distance from the pivot to the line of action of the force." },
+    { q: "State the conditions necessary for a body to remain in equilibrium.", a: "Resultant force is zero and net moment is zero", options: ["Resultant force is zero and net moment is zero", "Forces must be equal and moments must be equal", "The body must be stationary", "Resultant force is positive and net moment is zero"], f: "Equilibrium requires two conditions: the resultant force must be zero and the net moment about any point must also be zero." },
+    { q: "According to Newton’s third law, if Body A exerts a force on Body B, then:", a: "Body B exerts an equal and opposite force on Body A", options: ["Body B exerts a smaller force on Body A", "Body B exerts an equal and opposite force on Body A", "Body A accelerates Body B", "Both forces act on Body A"], f: "Newton’s Third Law states that if Body A exerts a force on Body B, then Body B must exert a force of equal magnitude and opposite direction back on Body A." },
+    { q: "Identify the feature of a force-extension graph that represents the work done in deforming a solid.", a: "The area under the graph", options: ["The gradient of the line", "The y-intercept", "The area under the graph", "The length of the line"], f: "The area under a force-extension graph represents the work done in stretching or deforming the material." },
+    { q: "Define the Young modulus, E, of a material.", a: "Stress / Strain", options: ["Stress × Strain", "Force / Extension", "Stress / Strain", "Strain / Stress"], f: "The Young modulus is a measure of a material's stiffness, defined as the ratio of tensile stress to tensile strain." },
+    { q: "Identify the group of particles that are NOT affected by the strong nuclear force.", a: "Leptons", options: ["Baryons", "Mesons", "Hadrons", "Leptons"], f: "Leptons are fundamental particles that do not contain quarks and are therefore not subject to the strong nuclear force." },
+    { q: "State the quark make-up of a meson.", a: "A quark-antiquark pair", options: ["Three quarks", "Three antiquarks", "A quark-antiquark pair", "Two up quarks and one down quark"], f: "Mesons are hadrons composed of a quark-antiquark pair, unlike baryons which consist of three quarks." },
+    { q: "Identify the phenomenon where the loading and unloading curves for rubber are different.", a: "Hysteresis", options: ["Plasticity", "Hysteresis", "Ductility", "Brittle fracture"], f: "Hysteresis occurs in materials like rubber when the energy returned during unloading is less than the energy used during loading, with the difference lost as heat." },
+    { q: "Wien’s displacement law states that the peak wavelength of a black body spectrum is:", a: "Inversely proportional to the absolute temperature", options: ["Directly proportional to the absolute temperature", "Inversely proportional to the absolute temperature", "Independent of the temperature", "Equal to the total luminosity"], f: "Wien’s displacement law shows that the peak wavelength of radiation is inversely proportional to the absolute temperature." },
+    { q: "Identify the force responsible for neutrino involvement and quark flavour changes.", a: "Weak nuclear force", options: ["Strong nuclear force", "Electromagnetic force", "Weak nuclear force", "Gravitational force"], f: "The weak nuclear force is uniquely responsible for interactions involving neutrinos and for changing the flavour of quarks." },
+    { q: "A projectile is launched horizontally. Describe its horizontal acceleration if air resistance is ignored.", a: "It is zero", options: ["It is constant at 9.81 m/s²", "It increases with time", "It is zero", "It decreases as the projectile falls"], f: "In the absence of air resistance, there are no horizontal forces acting on the projectile, so its horizontal acceleration remains zero." },
+    { q: "Define a 'black body' in terms of radiation.", a: "An object that absorbs all incident electromagnetic radiation", options: ["An object that reflects all incident radiation", "An object that absorbs all incident electromagnetic radiation", "An object that emits only visible light", "An object with a surface temperature of 0 K"], f: "A black body is a theoretical object that perfectly absorbs all incident electromagnetic radiation of all wavelengths." },
+    { q: "State the quark composition of a neutron.", a: "udd", options: ["uud", "udd", "uus", "ddd"], f: "A neutron consists of one up quark (+2/3) and two down quarks (-1/3, -1/3), resulting in a total charge of zero." },
+    { q: "Identify the feature of a displacement-time graph that represents velocity.", a: "The gradient of the line", options: ["The area under the graph", "The y-intercept", "The gradient of the line", "The square of the time"], f: "Velocity is the rate of change of displacement, which is represented by the gradient of a displacement-time graph." },
+    { q: "Linear momentum is defined as the product of:", a: "Mass and velocity", options: ["Mass and acceleration", "Force and time", "Mass and velocity", "Force and distance"], f: "Linear momentum is a vector quantity defined as the product of an object's mass and its velocity." },
+    { q: "Describe the appearance of a star's absorption spectrum.", a: "Dark lines superimposed on a continuous spectrum", options: ["Bright lines on a dark background", "A continuous rainbow without lines", "Dark lines superimposed on a continuous spectrum", "A single wavelength of light"], f: "A star's absorption spectrum consists of dark lines where specific wavelengths are absorbed by cooler gases in its atmosphere." },
+    { q: "State what is meant by a 'ductile' material.", a: "It can be drawn into wires or easily deformed plastically", options: ["It breaks without plastic deformation", "It can be drawn into wires or easily deformed plastically", "It returns to its original shape after any load", "It has no elastic limit"], f: "Ductile materials are those that can undergo significant plastic deformation, allowing them to be drawn into thin wires without snapping." },
+    { q: "Identify the base SI unit for the Stefan constant (σ).", a: "kg s^-3 K^-4", options: ["W m^-2 K^-4", "J s^-1 m^-2 K^-4", "kg s^-3 K^-4", "N m^-2 K^-4"], f: "In SI base units, the Stefan constant is expressed as kg s⁻³ K⁻⁴, derived from its standard units of W m⁻² K⁻⁴." },
+
+    // BATCH 2 (1-50)
+    { q: "Identify which of the following is NOT an essential SI base unit.", a: "Joule", options: ["Mole", "Kelvin", "Joule", "Second"], f: "Joule is a derived unit (kg·m²·s⁻²); base units include kilograms, metres, seconds, amperes, moles, and kelvin." },
+    { q: "Express the Newton (N) in terms of SI base units.", a: "kg m s^-2", options: ["kg m s^-1", "kg m s^-2", "kg m^2 s^-2", "kg m^2 s^-3"], f: "One Newton is the force needed to accelerate 1 kg at 1 m s⁻², which translates to kg·m·s⁻² in base units." },
+    { q: "State which of the following is a vector quantity.", a: "Acceleration", options: ["Pressure", "Temperature", "Acceleration", "Mass"], f: "Acceleration is a vector because it requires both magnitude and direction; mass, pressure, and temperature are scalars." },
+    { q: "A student measures a ball bearing to have a volume of 5.6 cm^3 and a mass of 45.4 g. Calculate its density in g cm^-3.", a: "8.1", options: ["0.12", "8.1", "254", "4.8"], f: "Density is mass divided by volume; 45.4 g divided by 5.6 cm³ gives a density of approximately 8.1 g cm⁻³." },
+    { q: "Identify the term used interchangeably with 'torque' to describe the turning effect of a force.", a: "Moment", options: ["Work", "Moment", "Power", "Momentum"], f: "'Moment' and 'torque' are interchangeable terms used to describe the turning effect produced by a force." },
+    { q: "A uniform metre rule is pivoted at its centre (50 cm mark). A 10 N load is placed at the 20 cm mark. Calculate the magnitude of the clockwise moment needed at the 70 cm mark to balance it.", a: "3 N m", options: ["2 N m", "3 N m", "5 N m", "300 N m"], f: "The moment is force times distance from pivot: 10 N multiplied by 0.3 m (the distance from the 20 cm mark to the 50 cm pivot) equals 3 N m." },
+    { q: "Identify the position of the centre of gravity for a uniform cylinder.", a: "At the geometric centre", options: ["On the top surface", "At the geometric centre", "On the base", "Outside the cylinder"], f: "For any uniform object, the centre of gravity is located at its exact geometric centre." },
+    { q: "State the two conditions necessary for a body to remain in equilibrium.", a: "Resultant force is zero and net moment is zero", options: ["Resultant force is zero and net moment is zero", "Forces are equal and moments are equal", "Body is at rest and moving at constant speed", "Velocity is zero and acceleration is zero"], f: "Static equilibrium is only achieved when both the resultant force and the net moment acting on the body are zero." },
+    { q: "Define 'mean speed' as used in kinematics.", a: "Total distance divided by total time", options: ["Displacement divided by time", "Change in velocity divided by time", "Total distance divided by total time", "Initial speed plus final speed divided by two"], f: "Mean speed is the average rate of travel, calculated as the total distance covered divided by the total time taken." },
+    { q: "Identify the feature of a velocity-time graph that represents the displacement of an object.", a: "Area under the graph", options: ["Gradient of the line", "Y-intercept", "Area under the graph", "Length of the line"], f: "The area bounded by a velocity-time graph and the time axis represents the total displacement of the object." },
+    { q: "A ball is dropped from rest in a vacuum. Describe its acceleration.", a: "Constant at g", options: ["Decreasing", "Increasing", "Constant at g", "Zero"], f: "In a vacuum, the only force is gravity, which causes all objects to fall with a constant acceleration of g." },
+    { q: "State the value of the horizontal acceleration of a projectile when air resistance is ignored.", a: "Zero", options: ["9.81 m s^-2", "Zero", "Depends on the launch angle", "Decreases during flight"], f: "Horizontal motion is independent of gravity; without air resistance, there is no horizontal force to cause acceleration." },
+    { q: "Describe the vertical component of velocity for a projectile at the peak of its trajectory.", a: "Zero", options: ["Maximum", "Constant", "Zero", "Equal to the launch velocity"], f: "At the peak of its flight, a projectile's vertical velocity is momentarily zero before it begins to accelerate downwards." },
+    { q: "According to Newton’s third law, identify a key rule for identifying pairs of forces.", a: "They act on different bodies", options: ["They act on the same body", "They are different types of force", "They act on different bodies", "They act in the same direction"], f: "Newton’s Third Law force pairs must always act on two different bodies and must be the same type of force." },
+    { q: "Linear momentum is defined as the product of mass and:", a: "Velocity", options: ["Acceleration", "Force", "Velocity", "Displacement"], f: "Momentum is the product of mass and velocity; it describes the 'quantity of motion' an object possesses." },
+    { q: "State the relationship between resultant force and momentum for an object of constant mass.", a: "Force equals the rate of change of momentum", options: ["Force equals momentum divided by time", "Force equals change in momentum multiplied by time", "Force equals the rate of change of momentum", "Force equals total momentum"], f: "According to Newton’s Second Law, the resultant force on an object is equal to its rate of change of momentum." },
+    { q: "Identify the type of collision where total kinetic energy is conserved.", a: "Elastic", options: ["Inelastic", "Elastic", "Plastic", "Explosive"], f: "Elastic collisions are specifically defined as those in which the total kinetic energy of the system is conserved." },
+    { q: "Calculate the work done when a constant 50 N force moves an object 4 m in the direction of the force.", a: "200 J", options: ["12.5 J", "46 J", "200 J", "1250 J"], f: "Work done is the product of the force and the distance moved in the direction of the force (50 N × 4 m = 200 J)." },
+    { q: "State the equation used to calculate efficiency in terms of energy transfer.", a: "Useful output / total input", options: ["Total input / useful output", "Useful output / total input", "Useful output × total input", "Total input - useful output"], f: "Efficiency is a ratio showing how much of the total energy input is converted into useful energy output." },
+    { q: "Define power in terms of energy transfer.", a: "Rate of energy transfer", options: ["Force × distance", "Rate of energy transfer", "Energy transferred × time", "Useful energy / total energy"], f: "Power is defined as the rate at which energy is transferred or the rate at which work is done." },
+    { q: "State Hooke’s law for a material undergoing elastic deformation.", a: "Force is proportional to extension", options: ["Force is proportional to length", "Force is proportional to extension", "Stress is proportional to Young modulus", "Strain is proportional to extension"], f: "Hooke’s Law states that the extension of a material is directly proportional to the applied force, provided the elastic limit is not exceeded." },
+    { q: "Identify the unit for the spring constant, k.", a: "N m^-1", options: ["N m", "N m^-1", "N m^-2", "J m^-1"], f: "The spring constant (k) represents stiffness and is measured in Newtons per metre (N m⁻¹)." },
+    { q: "Define tensile stress (σ) in a material.", a: "Force / cross-sectional area", options: ["Force / extension", "Extension / original length", "Force / cross-sectional area", "Work done / volume"], f: "Tensile stress is defined as the stretching force applied divided by the cross-sectional area of the material." },
+    { q: "Define tensile strain (ε).", a: "Extension / original length", options: ["Force / Area", "Extension / original length", "Original length / extension", "Stress / Young modulus"], f: "Tensile strain is the ratio of the extension to the original length, making it a dimensionless quantity." },
+    { q: "Identify what the gradient of the linear region of a stress-strain graph represents.", a: "Young modulus", options: ["Spring constant", "Young modulus", "Elastic limit", "Breaking stress"], f: "Within the elastic region, the gradient of a stress-strain graph equals the Young modulus of the material." },
+    { q: "Identify the classification for a solid with long-range regular atomic arrangement.", a: "Crystalline", options: ["Amorphous", "Polymeric", "Crystalline", "Brittle"], f: "Crystalline solids are characterized by atoms or molecules arranged in a regular, long-range repeating lattice." },
+    { q: "Identify a key feature of an amorphous solid such as glass.", a: "Short-range order only", options: ["Regular lattice", "Long-range order", "Short-range order only", "High ductility"], f: "Amorphous solids, such as glass, lack long-range structure and only possess short-range atomic order." },
+    { q: "Describe a property of a 'ductile' material.", a: "It can be drawn into a wire", options: ["It snaps without plastic deformation", "It can be drawn into a wire", "It returns to its original shape after any load", "It has no elastic region"], f: "Ductility is the property that allows a material to undergo large plastic deformation and be drawn into a wire." },
+    { q: "Identify the phenomenon where energy is lost as heat during the loading and unloading of rubber.", a: "Hysteresis", options: ["Plasticity", "Necking", "Hysteresis", "Creep"], f: "Hysteresis refers to the energy lost as heat when a material like rubber is loaded and then unloaded." },
+    { q: "Define a 'black body' in thermal radiation.", a: "An object that absorbs all incident electromagnetic radiation", options: ["An object that reflects all incident radiation", "An object that emits no radiation", "An object that absorbs all incident electromagnetic radiation", "An object that is always at 0 K"], f: "A black body is an ideal physical body that absorbs all incident electromagnetic radiation, regardless of frequency." },
+    { q: "Wien’s displacement law states that the peak wavelength (λmax) is:", a: "Inversely proportional to absolute temperature", options: ["Directly proportional to absolute temperature", "Proportional to temperature squared", "Inversely proportional to absolute temperature", "Independent of temperature"], f: "Wien’s law states that the peak wavelength of radiation emitted is inversely proportional to the absolute temperature." },
+    { q: "Stefan’s law states that the total power (P) radiated from a black body of area A is proportional to:", a: "T^4", options: ["T", "T^2", "T^3", "T^4"], f: "Stefan’s law states that the total power radiated by a black body is proportional to the fourth power of its absolute temperature (T⁴)." },
+    { q: "Identify the source of the continuous emission spectrum in a stellar spectrum.", a: "The dense gas of the surface", options: ["The tenuous outer atmosphere", "The dense gas of the surface", "Cold interstellar clouds", "Distant galaxies"], f: "The continuous emission spectrum of a star is produced by the dense gas found at its surface." },
+    { q: "Describe the appearance of a star's absorption spectrum.", a: "Dark lines superimposed on a continuous spectrum", options: ["Bright lines on a dark background", "A continuous rainbow with no features", "Dark lines superimposed on a continuous spectrum", "A single wavelength of light"], f: "Dark absorption lines are created when the continuous spectrum from a star's surface passes through cooler gases in its atmosphere." },
+    { q: "Identify which of the following is a fundamental particle (lepton).", a: "Electron neutrino", options: ["Proton", "Neutron", "Pion", "Electron neutrino"], f: "Leptons are fundamental particles; the electron neutrino is a lepton, while protons and neutrons are composite hadrons." },
+    { q: "State the charge of an up (u) quark in terms of the elementary charge e.", a: "+2/3", options: ["-1/3", "+1/3", "+2/3", "-2/3"], f: "Up quarks carry a fractional electric charge of +2/3 e." },
+    { q: "State the charge of a down (d) quark in terms of the elementary charge e.", a: "-1/3", options: ["-1/3", "+1/3", "+2/3", "-1"], f: "Down quarks carry a fractional electric charge of -1/3 e." },
+    { q: "Identify the quark composition of a neutron.", a: "udd", options: ["uud", "udd", "uuu", "ddd"], f: "A neutron is made of one up quark (+2/3) and two down quarks (-1/3, -1/3), giving it a net charge of zero." },
+    { q: "State the quark make-up of a meson.", a: "A quark-antiquark pair", options: ["Three quarks", "Three antiquarks", "A quark-antiquark pair", "Two up quarks and one down quark"], f: "Mesons are a type of hadron always consisting of one quark and one antiquark bound together." },
+    { q: "Identify the force that is NOT felt by leptons.", a: "Strong nuclear force", options: ["Gravitational force", "Weak nuclear force", "Electromagnetic force", "Strong nuclear force"], f: "The strong nuclear force only acts on quarks and hadrons; leptons like electrons and neutrinos are unaffected by it." },
+    { q: "Identify the characteristic signature of a weak interaction in particle physics.", a: "Neutrino involvement", options: ["Photon emission", "Neutrino involvement", "Infinite range", "Conservation of quark flavour"], f: "Neutrinos only interact via the weak nuclear force and gravity, so their involvement signifies a weak interaction." },
+    { q: "State the range of the strong nuclear force.", a: "Short (~10^-15 m)", options: ["Infinite", "Short (~10^-15 m)", "Very short (~10^-18 m)", "Atomic (~10^-10 m)"], f: "The strong nuclear force is extremely powerful but only acts over very short distances (~10⁻¹⁵ m)." },
+    { q: "Identify the range of the electromagnetic force.", a: "Infinite", options: ["Infinite", "Short", "Very short", "Zero"], f: "The electromagnetic force acts between all charged particles and has an infinite range." },
+    { q: "State what occurs when a particle and its corresponding antiparticle meet.", a: "They annihilate into energy (photons)", options: ["They double in mass", "They form a new hadron", "They annihilate into energy (photons)", "They repel each other"], f: "During annihilation, a particle and its antiparticle collide and convert their total mass into energy in the form of photons." },
+    { q: "Identify the antiparticle of the electron.", a: "Positron", options: ["Proton", "Antineutrino", "Positron", "Neutron"], f: "The positron is the antiparticle of the electron; it has the same mass but a positive charge of +1 e." },
+    { q: "Identify the conservation law that can be violated in weak interactions but not in strong interactions.", a: "Quark flavour", options: ["Baryon number", "Charge", "Quark flavour", "Lepton number"], f: "The weak interaction is the only force capable of changing the 'flavour' of a quark, such as during beta decay." },
+    { q: "State the feature of a force-extension graph that represents the work done in deforming a solid.", a: "The area under the graph", options: ["The gradient of the line", "The y-intercept", "The area under the graph", "The length of the line"], f: "The work done to stretch or compress a material is equal to the area under its force-extension graph." },
+    { q: "Identify the units of the Stefan constant (σ).", a: "W m^-2 K^-4", options: ["W m^2 K^4", "W m^-2 K^-4", "J s^-1 m^2 K", "kg s^-2 K^-4"], f: "The Stefan constant (σ) is measured in Watts per square metre per Kelvin to the fourth power (W m⁻² K⁻⁴)." },
+    { q: "In a projectile's path, ignoring air resistance, describe the vertical acceleration.", a: "It is constant at g", options: ["It is zero", "It is constant at g", "It increases as the object falls", "It decreases as the object falls"], f: "Without air resistance, gravity is the only force acting vertically, causing a constant acceleration of 9.81 m s⁻²." },
+    { q: "Identify the point on a stress-strain graph beyond which the material will not return to its original length.", a: "Elastic limit", options: ["Limit of proportionality", "Elastic limit", "Yield point", "Breaking point"], f: "The elastic limit is the point beyond which a material will no longer return to its original shape when the force is removed." }
+];
+
+let quizSet = [];
+let currentIndex = 0;
+let userAnswers = [];
+let score = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startNewSession() {
+    const pool = [...masterQuestionBank];
+    shuffle(pool);
+    quizSet = pool.slice(0, 20); // Pick 20 for this session
+    currentIndex = 0;
+    userAnswers = new Array(20).fill(null);
+    score = 0;
+    initUI();
+}
+
+function initUI() {
+    document.getElementById('quiz-container').classList.remove('hidden');
+    document.getElementById('summary-container').classList.add('hidden');
+    renderSidebar();
+    loadQuestion(0);
+    updateProgress();
+}
+
+function renderSidebar() {
+    const list = document.getElementById('question-list');
+    list.innerHTML = '';
+    quizSet.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left p-3 mb-2 rounded-xl text-[11px] transition-all flex items-center justify-between border ${index === currentIndex ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold' : 'bg-transparent border-transparent text-slate-500 hover:bg-slate-50'}`;
+        btn.onclick = () => loadQuestion(index);
+        
+        let status = '';
+        if (userAnswers[index] !== null) {
+            status = userAnswers[index].isCorrect 
+                ? '<div class="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div>' 
+                : '<div class="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div>';
+        }
+        
+        btn.innerHTML = `<span>Question ${index + 1}</span> ${status}`;
+        list.appendChild(btn);
+    });
+}
+
+function loadQuestion(index) {
+    currentIndex = index;
+    const data = quizSet[index];
+    
+    document.getElementById('question-tag').textContent = `Question ${index + 1} / 20`;
+    document.getElementById('question-text').textContent = data.q;
+    document.getElementById('feedback-container').classList.add('hidden');
+    
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    
+    data.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-4 border-2 border-slate-100 rounded-2xl hover:border-indigo-200 hover:bg-indigo-50/50 transition-all font-medium text-slate-700 flex items-center gap-4 group";
+        
+        let icon = '<div class="w-5 h-5 rounded-full border-2 border-slate-200 flex-shrink-0 group-hover:border-indigo-400"></div>';
+        
+        if (userAnswers[index] !== null) {
+            btn.disabled = true;
+            if (opt === data.a) {
+                btn.className = "w-full text-left p-4 border-2 border-green-500 bg-green-50 rounded-2xl font-bold text-green-700 flex items-center gap-4";
+                icon = '<div class="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-[10px]">✓</div>';
+            } else if (opt === userAnswers[index].selected) {
+                btn.className = "w-full text-left p-4 border-2 border-red-500 bg-red-50 rounded-2xl font-bold text-red-700 flex items-center gap-4";
+                icon = '<div class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">✕</div>';
+            } else {
+                btn.className = "w-full text-left p-4 border-2 border-slate-50 bg-slate-50/50 opacity-40 rounded-2xl flex items-center gap-4";
+            }
+            showFeedback(userAnswers[index].isCorrect);
+        } else {
+            btn.onclick = () => handleAnswer(opt);
+        }
+        
+        btn.innerHTML = `${icon} <span>${opt}</span>`;
+        container.appendChild(btn);
+    });
+    
+    renderSidebar();
+}
+
+function handleAnswer(selected) {
+    const correct = quizSet[currentIndex].a;
+    const isCorrect = selected === correct;
+    userAnswers[currentIndex] = { selected, isCorrect };
+    if (isCorrect) score++;
+    
+    updateProgress();
+    loadQuestion(currentIndex);
+}
+
+function showFeedback(isCorrect) {
+    const feedback = document.getElementById('feedback-container');
+    const status = document.getElementById('feedback-status');
+    const box = document.getElementById('feedback-box');
+    const icon = document.getElementById('feedback-icon');
+    const text = document.getElementById('feedback-text');
+    
+    feedback.classList.remove('hidden');
+    
+    if (isCorrect) {
+        box.className = "p-5 rounded-2xl border-2 border-green-100 bg-green-50/50 flex gap-4 items-start";
+        status.textContent = "Excellent! Correct";
+        status.className = "font-black text-[10px] uppercase tracking-widest mb-1 text-green-700";
+        icon.innerHTML = '✨';
+    } else {
+        box.className = "p-5 rounded-2xl border-2 border-red-100 bg-red-50/50 flex gap-4 items-start";
+        status.textContent = "Keep Learning";
+        status.className = "font-black text-[10px] uppercase tracking-widest mb-1 text-red-700";
+        icon.innerHTML = '📚';
+    }
+    
+    // Inject the specific feedback from the data object
+    text.textContent = quizSet[currentIndex].f;
+
+    const nextBtn = document.getElementById('next-btn');
+    if (currentIndex < 19) {
+        nextBtn.textContent = "Next Question";
+        nextBtn.onclick = () => loadQuestion(currentIndex + 1);
+    } else {
+        nextBtn.textContent = "Final Summary";
+        nextBtn.onclick = finish;
+    }
+}
+
+function updateProgress() {
+    const count = userAnswers.filter(a => a !== null).length;
+    document.getElementById('progress-bar').style.width = (count / 20 * 100) + '%';
+    document.getElementById('progress-text').textContent = count + '/20';
+}
+
+function finish() {
+    document.getElementById('quiz-container').classList.add('hidden');
+    document.getElementById('summary-container').classList.remove('hidden');
+    document.getElementById('final-score').textContent = score + '/20';
+    document.getElementById('final-percent').textContent = Math.round(score/20*100) + '%';
+}
+
+window.onload = startNewSession;
+</script>
+</body>
+</html>
