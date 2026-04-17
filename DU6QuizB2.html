@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCSE Unit 2 Physics | Mastery Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+        }
+
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 1024px) {
+            .app-container {
+                grid-template-columns: 320px 1fr;
+            }
+            .sidebar {
+                display: flex !important;
+                border-right: 1px solid #e2e8f0;
+            }
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:active { transform: scale(0.98); }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hp-bar { transition: width 0.4s ease-in-out; }
+
+        .nav-dot {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 800;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .nav-dot.selectable { cursor: pointer; }
+        .nav-dot.selectable:hover { transform: scale(1.1); }
+
+        .damage-pop {
+            animation: popUp 0.8s ease-out forwards;
+            position: absolute;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes popUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-60px); opacity: 0; }
+        }
+
+        /* Responsive Speech Bubble Fix */
+        .speech-bubble {
+            position: absolute;
+            bottom: 105%; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 2px solid #334155;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: bold;
+            width: 85%; 
+            max-width: 200px;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+            z-index: 60;
+            animation: bubbleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            word-wrap: break-word;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+
+        @keyframes bubbleIn {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.5) translateY(10px); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-900 overflow-x-hidden">
+
+    <div class="app-container">
+        <!-- Sidebar (Desktop only) -->
+        <aside class="sidebar hidden flex-col bg-white p-6 sticky top-0 h-screen overflow-y-auto">
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">Physics U2</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">v10.2 Pro</p>
+            </div>
+
+            <div id="sidebar-active-content" class="hidden space-y-6">
+                <!-- Status Indicators -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="prog-label">Progress</p>
+                    <div class="flex items-end gap-2 mb-2">
+                        <span id="side-current" class="text-3xl font-black text-slate-800">0</span>
+                        <span class="text-slate-400 font-bold mb-1">/ <span id="side-total">0</span></span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="side-bar" class="bg-indigo-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Battle Specific Sidebar -->
+                <div id="battle-sidebar-stats" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white">
+                        <p class="text-[10px] font-black text-indigo-400 uppercase mb-2">Battery Charge</p>
+                        <div class="flex items-center gap-3">
+                            <span id="side-charge" class="text-2xl font-black">0</span>
+                            <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="side-charge-bar" class="bg-indigo-400 h-full w-0 transition-all"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigator -->
+                <div id="navigator-section">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="nav-label">Question Map</p>
+                    <div id="nav-grid" class="grid grid-cols-6 gap-1.5"></div>
+                </div>
+            </div>
+
+            <div id="sidebar-empty" class="flex-1 flex flex-col items-center justify-center text-center opacity-30">
+                <div class="text-4xl mb-2">🛰️</div>
+                <p class="text-[10px] font-black uppercase tracking-widest">System Idle</p>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-slate-100">
+                <button onclick="resetToMenu()" class="w-full py-3 text-sm font-bold text-slate-400 hover:text-rose-500 transition-colors">Abort Mission</button>
+            </div>
+        </aside>
+
+        <main class="flex flex-col relative h-screen overflow-hidden">
+            <!-- Mobile Navigation Bar -->
+            <nav class="lg:hidden glass sticky top-0 z-50 px-4 py-3 flex justify-between items-center bg-white/90">
+                <div class="flex items-center gap-3">
+                    <span onclick="resetToMenu()" class="font-extrabold text-indigo-600 text-lg cursor-pointer">U2</span>
+                    <!-- Mobile Question Selector Dropdown -->
+                    <select id="mob-q-selector" onchange="jumpTo(parseInt(this.value))" class="hidden text-xs font-bold bg-slate-100 border-none rounded-lg px-2 py-1 outline-none text-slate-600 focus:ring-2 focus:ring-indigo-500">
+                    </select>
+                </div>
+                
+                <div id="mob-stats" class="hidden flex items-center gap-4">
+                    <!-- Mobile Battery HUD (Specific for Battle Mode) -->
+                    <div id="mob-battery-hud" class="hidden flex flex-col items-center justify-center bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100">
+                        <span id="mob-charge-text" class="text-[10px] font-black text-indigo-600 leading-none">0% NRG</span>
+                        <div class="w-12 h-1 bg-indigo-200 rounded-full mt-1 overflow-hidden">
+                            <div id="mob-charge-bar" class="h-full bg-indigo-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+
+                    <div id="mob-prog-hud" class="flex flex-col items-end">
+                        <span id="mob-prog-text" class="text-[10px] font-black text-slate-400 uppercase leading-none">0 / 0</span>
+                        <div class="w-16 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div id="mob-prog-bar" class="h-full bg-indigo-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+                    <button onclick="resetToMenu()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main Scrollable Area -->
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-12">
+                <div class="flex flex-col items-center justify-start p-6 md:p-12">
+                    <div id="content-wrap" class="w-full max-w-2xl relative">
+                        
+                        <!-- MENU -->
+                        <div id="menu-screen" class="fade-in space-y-8 py-6">
+                            <div class="text-center md:text-left">
+                                <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">Select <span class="text-indigo-600">Module.</span></h2>
+                                <p class="text-slate-500 mt-2">Master 70 core objectives through different training protocols.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button onclick="startSession('standard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-indigo-500 transition-all text-left shadow-sm">
+                                    <div class="text-2xl mb-3">🎯</div>
+                                    <h3 class="font-bold text-lg">Standard Quiz</h3>
+                                    <p class="text-xs text-slate-500 mt-1">20 Random objectives from the bank.</p>
+                                </button>
+
+                                <button onclick="startSession('flashcard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-emerald-500 transition-all text-left shadow-sm">
+                                    <div class="text-2xl mb-3">📇</div>
+                                    <h3 class="font-bold text-lg">Full Flashcards</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Review all 70 questions with hidden logic.</p>
+                                </button>
+
+                                <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-lg flex items-center gap-2">Survival <span class="text-rose-500 text-sm">💀</span></h3>
+                                        <p class="text-slate-400 text-xs mt-1">No errors allowed. High pressure.</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-4">
+                                        <button onclick="startSession('survival', 10)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">10Q</button>
+                                        <button onclick="startSession('survival', 30)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">30Q</button>
+                                        <button onclick="startSession('survival', 70)" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 rounded-xl text-[10px] font-bold uppercase">Gauntlet</button>
+                                    </div>
+                                </div>
+
+                                <div class="p-6 bg-indigo-600 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-lg flex items-center gap-2">Battle Bot <span class="text-yellow-400 text-sm">🤖</span></h3>
+                                        <p class="text-indigo-200 text-xs mt-1">Turn-based knowledge combat.</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-4">
+                                        <button onclick="startSession('battle', 'easy')" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">Standard</button>
+                                        <button onclick="startSession('battle', 'hard')" class="flex-1 py-2 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-[10px] font-bold uppercase">Elite</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BATTLE ARENA -->
+                        <div id="battle-ui" class="hidden fade-in space-y-6 mb-8 mt-12 relative">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div id="bot-card" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 text-center relative">
+                                    <div id="bot-speech" class="speech-bubble hidden">Beep Boop!</div>
+                                    <div class="text-3xl mb-2">👾</div>
+                                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-1">
+                                        <div id="bot-hp-bar" class="hp-bar bg-rose-500 h-full w-full"></div>
+                                    </div>
+                                    <p id="bot-hp-text" class="text-[10px] text-slate-400 font-bold uppercase">Bot: 100%</p>
+                                </div>
+                                <div id="player-card" class="bg-white p-5 rounded-2xl border border-slate-200 text-center shadow-sm relative">
+                                    <div class="text-3xl mb-2">🧑‍🚀</div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-1">
+                                        <div id="player-hp-bar" class="hp-bar bg-emerald-500 h-full w-full"></div>
+                                    </div>
+                                    <p id="player-hp-text" class="text-[10px] text-slate-500 font-bold uppercase">User: 100%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUIZ CONTENT -->
+                        <div id="quiz-ui" class="hidden fade-in space-y-8 pt-4">
+                            <div id="q-header" class="space-y-3">
+                                <span id="q-tag" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-black uppercase tracking-widest border border-indigo-100">Physics Core</span>
+                                <h2 id="q-text" class="text-2xl font-extrabold text-slate-900 leading-tight"></h2>
+                            </div>
+                            <div id="options-box" class="grid grid-cols-1 gap-3"></div>
+                            
+                            <!-- Battle Combat Menu -->
+                            <div id="battle-actions" class="hidden grid grid-cols-3 gap-3">
+                                <button onclick="performCombat('attack')" id="atk-btn" class="flex flex-col items-center p-4 bg-rose-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">💥</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Attack</span>
+                                    <span class="text-[8px] font-bold opacity-80">(20 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('heal')" id="heal-btn" class="flex flex-col items-center p-4 bg-emerald-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">🧪</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Heal</span>
+                                    <span class="text-[8px] font-bold opacity-80">(15 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('shield')" id="shd-btn" class="flex flex-col items-center p-4 bg-indigo-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">🛡️</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Shield</span>
+                                    <span class="text-[8px] font-bold opacity-80">(10 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('wait')" id="wait-btn" class="hidden col-span-3 flex flex-col items-center p-4 bg-slate-400 rounded-2xl text-white shadow-lg transition-all">
+                                    <span class="text-xl">💤</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Out of Energy: Wait / Recharge</span>
+                                    <span class="text-[8px] font-bold opacity-80">(Next Question)</span>
+                                </button>
+                            </div>
+
+                            <!-- Flashcard Logic -->
+                            <div id="flash-box" class="hidden space-y-6">
+                                <div class="p-8 bg-indigo-600 rounded-3xl text-white shadow-xl">
+                                    <p id="flash-ans" class="text-xl font-bold"></p>
+                                    <p id="flash-exp" class="mt-4 pt-4 border-t border-white/10 text-indigo-200 text-sm italic"></p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button onclick="flashResult(false)" class="p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-400">Needs Review</button>
+                                    <button onclick="flashResult(true)" class="p-4 bg-emerald-500 rounded-xl font-bold text-white shadow-lg">Nailed It</button>
+                                </div>
+                            </div>
+
+                            <div id="feedback-box" class="hidden p-6 rounded-2xl border flex gap-4 fade-in">
+                                <div id="fb-icon" class="text-2xl"></div>
+                                <div>
+                                    <p id="fb-status" class="font-black text-[10px] uppercase mb-1"></p>
+                                    <p id="fb-text" class="text-sm text-slate-600"></p>
+                                </div>
+                            </div>
+                            <button id="main-btn" onclick="handleMainAction()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase shadow-xl hover:bg-indigo-600 transition-colors">Check Response</button>
+                        </div>
+
+                        <!-- SUMMARY -->
+                        <div id="summary-ui" class="hidden fade-in text-center py-10">
+                            <div id="sum-icon" class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">🏆</div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Protocol Complete</h2>
+                            <p id="sum-text" class="text-slate-500 mb-8"></p>
+                            <div class="grid grid-cols-1 gap-4 mb-8 max-w-sm mx-auto">
+                                <div class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Final Score</p><p id="sum-score" class="text-2xl font-black text-indigo-600">0/0</p></div>
+                                <div id="sum-pct-wrap" class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Accuracy</p><p id="sum-pct" class="text-2xl font-black text-indigo-600">0%</p></div>
+                            </div>
+                            <button onclick="resetToMenu()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase">Return to Main Menu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+const QUESTIONS = [
+    { q: "What does the gradient of a distance-time graph represent?", a: "Speed", options: ["Acceleration", "Speed", "Distance", "Resultant force"], f: "The gradient of a distance-time graph is the speed. A horizontal line shows the object is stationary." },
+            { q: "A car travels at 30 m/s for 10 seconds. Calculate the distance travelled.", a: "300 m", options: ["3 m", "20 m", "300 m", "3000 m"], f: "Distance is calculated by multiplying speed by time (30×10=300)." },
+            { q: "How is acceleration determined from a velocity-time graph?", a: "The gradient of the line", options: ["The area under the line", "The gradient of the line", "The highest point on the y-axis", "The total time on the x-axis"], f: "The gradient represents the rate of change of velocity, which is acceleration." },
+            { q: "What does the area under a velocity-time graph represent?", a: "Distance travelled", options: ["Acceleration", "Mean speed", "Distance travelled", "Resultant force"], f: "The area under the graph corresponds to the total displacement or distance covered." },
+            { q: "Define 'thinking distance'.", a: "The distance travelled during the driver's reaction time.", options: ["The distance travelled while the brakes are applied.", "The total distance taken to stop.", "The distance travelled during the driver's reaction time.", "The distance required to see a hazard."], f: "Thinking distance is the distance covered from the moment a hazard is seen until the brakes are applied." },
+            { q: "Which factor increases braking distance but NOT thinking distance?", a: "Icy roads", options: ["Tiredness", "Alcohol", "Icy roads", "High speed"], f: "Road conditions affect the friction between tyres and the road, affecting braking. Tiredness and alcohol only affect reaction time." },
+            { q: "An average driver at 13 m/s has a reaction time of 0.7 s. What is the thinking distance?", a: "9.1 m", options: ["0.05 m", "9.1 m", "13.7 m", "18.5 m"], f: "Thinking distance is speed multiplied by reaction time (13×0.7=9.1)." },
+            { q: "How does doubling the speed of a car affect the thinking distance?", a: "It doubles.", options: ["It stays the same.", "It doubles.", "It triples.", "It quadruples."], f: "Thinking distance is directly proportional to speed. If speed halves, thinking distance halves." },
+            { q: "What is the correct unit for acceleration?", a: "m/s²", options: ["m/s", "m/s²", "N/kg", "J"], f: "Acceleration is the change in velocity per second, measured in metres per second squared." },
+            { q: "Describe the motion when a velocity-time graph has a constant negative gradient.", a: "Constant deceleration", options: ["Constant speed", "Increasing acceleration", "Constant deceleration", "Stationary"], f: "A straight line sloping downwards indicates the object is slowing down at a steady rate." },
+            { q: "What is 'inertia'?", a: "The resistance of an object to a change in its state of motion.", options: ["The total force acting on an object.", "The resistance of an object to a change in its state of motion.", "The speed at which an object travels.", "The energy stored in a moving mass."], f: "Inertia is a property of mass that resists changes in velocity." },
+            { q: "State Newton's first law of motion.", a: "An object remains at rest or uniform motion unless acted on by a resultant force.", options: ["Force equals mass times acceleration.", "Every action has an equal and opposite reaction.", "An object remains at rest or uniform motion unless acted on by a resultant force.", "Weight is mass times gravity."], f: "If forces are balanced, an object's motion will not change." },
+            { q: "Calculate the resultant force needed to accelerate a 2.3 × 10⁵ kg train at 0.7 m/s².", a: "1.61 × 10⁵ N", options: ["1.61 × 10⁵ N", "3.28 × 10⁵ N", "3.00 × 10⁴ N", "1.61 × 10⁶ N"], f: "Using F=ma: (2.3×10⁵) × 0.7 = 1.61×10⁵." },
+            { q: "What is the weight of a 12 kg crate on Earth (g = 10 N/kg)?", a: "120 N", options: ["1.2 N", "12 N", "120 N", "1200 N"], f: "Weight is mass multiplied by gravitational field strength (12×10=120)." },
+            { q: "Describe the forces acting on an object at terminal speed.", a: "Weight is balanced by air resistance.", options: ["Gravity is the only force acting.", "Air resistance is greater than weight.", "Weight is balanced by air resistance.", "The resultant force is at its maximum."], f: "At terminal speed, the upward drag equals the downward weight, so the resultant force is zero." },
+            { q: "According to Newton's third law, if the Earth pulls a ball down with 1.5 N, what is the reaction?", a: "The ball pulls the Earth up with 1.5 N.", options: ["Air resistance pushes the ball up with 1.5 N.", "The ball pulls the Earth up with 1.5 N.", "The Earth pushes the ball up with 1.5 N.", "There is no reaction because the Earth is too heavy."], f: "Newton’s third law involves two bodies exerting equal and opposite forces of the same type on each other." },
+            { q: "How do seatbelts protect a driver during a collision?", a: "They exert an unbalanced force to stop the driver's forward motion.", options: ["They increase the driver's inertia.", "They exert an unbalanced force to stop the driver's forward motion.", "They decrease the time taken to stop.", "They eliminate all forces on the driver."], f: "Seatbelts provide the external resultant force required to change the driver's state of motion." },
+            { q: "Which design feature reduces 'idling losses' in a car?", a: "Stop-start systems", options: ["Streamlined shapes", "Correctly inflated tyres", "Stop-start systems", "Low mass materials"], f: "Stop-start systems turn off the engine when the vehicle is stationary to save fuel." },
+            { q: "How is 'rolling resistance' in a car typically reduced?", a: "Using correctly inflated tyres", options: ["Using more streamlined designs", "Using correctly inflated tyres", "Reducing the mass of the car", "Using regenerative braking"], f: "Correct tyre pressure and materials that don't heat up when distorted reduce rolling resistance." },
+            { q: "Define 'work done'.", a: "Energy transferred by a force acting over a distance.", options: ["The speed of an object.", "Energy transferred by a force acting over a distance.", "The rate of doing work.", "The total power of a car."], f: "Work is calculated as force multiplied by distance moved in the direction of the force." },
+            { q: "Calculate the work done lifting a 450 N crate a height of 1.6 m.", a: "720 J", options: ["281 J", "450 J", "720 J", "900 J"], f: "Work done = Force × distance (450×1.6=720)." },
+            { q: "What is the kinetic energy of a 90 kg skydiver falling at 50 m/s?", a: "112,500 J", options: ["2,250 J", "4,500 J", "112,500 J", "225,000 J"], f: "Using KE=1/2mv²: 0.5×90×50²=112,500." },
+            { q: "A ball loses 750 J of potential energy but only gains 600 J of kinetic energy. How much work was done against air resistance?", a: "150 J", options: ["0 J", "150 J", "600 J", "1350 J"], f: "The energy difference is the work done against resistive forces like air resistance (750−600=150)." },
+            { q: "What does the area under a force-extension graph represent?", a: "Work done in stretching the spring", options: ["Spring constant", "Work done in stretching the spring", "Maximum load", "Acceleration"], f: "The area under a linear force-extension graph is the elastic potential energy stored." },
+            { q: "What is the spring constant of a spring that extends 0.04 m under a 5 N load?", a: "125 N/m", options: ["0.2 N/m", "20 N/m", "125 N/m", "200 N/m"], f: "Using k=F/x: 5/0.04=125." },
+            { q: "How do crumple zones improve safety in a crash?", a: "They increase the distance over which energy is transferred, reducing force.", options: ["They decrease the stopping time.", "They increase the distance over which energy is transferred, reducing force.", "They increase the driver's kinetic energy.", "They prevent the car from deforming."], f: "By increasing the distance (W=Fd), the force exerted on occupants is reduced." },
+            { q: "Which planet is closest in size to Earth?", a: "Venus", options: ["Mercury", "Mars", "Venus", "Jupiter"], f: "Venus has a diameter of 12,000 km, very similar to Earth's 13,000 km." },
+            { q: "What is the correct order of the first four planets from the Sun?", a: "Mercury, Venus, Earth, Mars", options: ["Mercury, Earth, Venus, Mars", "Mercury, Venus, Mars, Earth", "Mercury, Venus, Earth, Mars", "Venus, Mercury, Earth, Mars"], f: "The terrestrial planets follow this sequence starting from the Sun." },
+            { q: "Define an 'Astronomical Unit' (AU).", a: "The mean distance between the Earth and the Sun.", options: ["The distance light travels in one year.", "The mean distance between the Earth and the Sun.", "The distance light travels in one minute.", "The diameter of the Solar System."], f: "1 AU is defined as the average Earth-Sun separation." },
+            { q: "How long does light take to reach Earth from a star 37 light years away?", a: "37 years", options: ["8 minutes", "37 minutes", "37 years", "370 years"], f: "A light year is the distance light travels in one year; therefore, it takes one year to travel one light year." },
+            { q: "What keeps a main sequence star stable?", a: "A balance between gravity and radiation/gas pressure.", options: ["The vacuum of space.", "A balance between gravity and radiation/gas pressure.", "The high speed of its rotation.", "Continuous explosions on the surface."], f: "Stability is achieved when inward gravitational force equals outward pressure." },
+            { q: "Which process powers stars?", a: "Nuclear fusion", options: ["Nuclear fission", "Chemical combustion", "Nuclear fusion", "Gravitational collapse"], f: "Stars generate energy by fusing increasingly heavier elements." },
+            { q: "What is the next stage in the Sun's life cycle after the main sequence?", a: "Red giant", options: ["Supernova", "White dwarf", "Red giant", "Black hole"], f: "When hydrogen runs out, the Sun will expand into a red giant." },
+            { q: "How are elements heavier than iron formed?", a: "In a supernova explosion.", options: ["Inside a main sequence star.", "In a red giant.", "In a supernova explosion.", "During the Big Bang."], f: "The extreme conditions of a supernova produce and eject heavy elements into space." },
+            { q: "On an H-R diagram, where are White Dwarfs located?", a: "Bottom left (Hot and Dim)", options: ["Top right (Cool and Bright)", "Bottom left (Hot and Dim)", "Top left (Hot and Bright)", "Middle (Main Sequence)"], f: "White dwarfs are the small, hot, dim cores left after a low-mass star dies." },
+            { q: "What is an 'isotope'?", a: "Atoms with the same number of protons but different neutrons.", options: ["Atoms with different numbers of protons.", "Atoms that are radioactive.", "Atoms with the same number of protons but different neutrons.", "Atoms with the same mass but different atomic numbers."], f: "Isotopes share an atomic number but have different nucleon numbers." },
+            { q: "Why are some nuclei unstable?", a: "An imbalance between protons and neutrons.", options: ["They have too many electrons.", "They are too cold.", "An imbalance between protons and neutrons.", "They have no neutrons."], f: "Radioactivity arises from an unstable ratio of nucleons." },
+            { q: "What is an alpha particle?", a: "A helium nucleus (2 protons, 2 neutrons).", options: ["A high-energy electron.", "A high-energy EM wave.", "A helium nucleus (2 protons, 2 neutrons).", "A lone proton."], f: "Alpha radiation is a group of two protons and two neutrons." },
+            { q: "What is a beta particle?", a: "A high-energy electron.", options: ["A helium nucleus.", "A high-energy electron.", "A slow-moving neutron.", "An electromagnetic wave."], f: "Beta radiation consists of fast-moving electrons emitted from the nucleus." },
+            { q: "What is gamma radiation?", a: "An electromagnetic wave.", options: ["A helium nucleus.", "A fast electron.", "An electromagnetic wave.", "A charged particle."], f: "Gamma is high-energy electromagnetic radiation with no mass or charge." },
+            { q: "Which type of radiation is most ionising?", a: "Alpha", options: ["Alpha", "Beta", "Gamma", "X-rays"], f: "Alpha particles are highly ionising due to their large mass and +2 charge." },
+            { q: "Which radiation is stopped by a few millimetres of aluminium?", a: "Beta", options: ["Alpha", "Beta", "Gamma", "Neutrons"], f: "Alpha is stopped by paper; beta is blocked by thin aluminium; gamma requires thick lead." },
+            { q: "Why is alpha radiation dangerous inside the body?", a: "It is highly ionising and cannot escape the body.", options: ["It is highly penetrating.", "It turns into helium gas.", "It is highly ionising and cannot escape the body.", "It has a very long half-life."], f: "Alpha particles cause intense local ionisation in tissues and cannot penetrate out through skin." },
+            { q: "State a natural source of background radiation.", a: "Radon gas from rocks", options: ["Medical X-rays", "Nuclear power stations", "Radon gas from rocks", "Cosmic rays from cell phones"], f: "Radon gas, emitted from rocks like granite, is a major natural source." },
+            { q: "How does altitude affect background radiation?", a: "It increases due to more cosmic radiation.", options: ["It decreases.", "It stays the same.", "It increases due to more cosmic radiation.", "It only affects radon levels."], f: "Higher altitudes have less atmosphere to block cosmic rays from space." },
+            { q: "Define 'half-life'.", a: "The time taken for the activity of a source to halve.", options: ["Half the time it takes for a source to decay completely.", "The time taken for the activity of a source to halve.", "The time it takes for a star to die.", "The time taken for one atom to decay."], f: "Half-life is the constant time required for half the unstable nuclei to decay." },
+            { q: "A source has a half-life of 30 years. How long for activity to fall to 1/8th?", a: "90 years", options: ["30 years", "60 years", "90 years", "120 years"], f: "1/8th corresponds to 3 half-lives (30×3=90)." },
+            { q: "Why are radioactive tracers usually gamma emitters?", a: "Gamma can penetrate out of the body to be detected.", options: ["Gamma is highly ionising.", "Gamma has a very long half-life.", "Gamma can penetrate out of the body to be detected.", "Gamma is safer to touch."], f: "Gamma's high penetration allows detection by external sensors while minimizing tissue ionisation." },
+            { q: "Why is nuclear waste storage a long-term problem?", a: "Some isotopes have half-lives of thousands of years.", options: ["The containers melt quickly.", "Some isotopes have half-lives of thousands of years.", "There is no more space on Earth.", "The waste turns into gold."], f: "High-level waste remains dangerous for generations, requiring stable, long-term storage." },
+            { q: "What is the function of a moderator in a nuclear reactor?", a: "To slow down neutrons.", options: ["To absorb neutrons.", "To slow down neutrons.", "To cool the reactor.", "To provide fuel."], f: "A moderator (like graphite or water) slows fast neutrons so they can be captured for fission." },
+            { q: "What is the purpose of control rods in a nuclear reactor?", a: "To absorb neutrons and control the reaction rate.", options: ["To slow down neutrons.", "To absorb neutrons and control the reaction rate.", "To reflect neutrons.", "To speed up the reaction."], f: "Control rods are moved in or out to manage the number of available neutrons." },
+            { q: "In a beta decay equation, how does the atomic number change?", a: "It increases by 1.", options: ["It decreases by 2.", "It increases by 1.", "It stays the same.", "It decreases by 1."], f: "In beta decay, a neutron turns into a proton, increasing the atomic number." },
+            { q: "In an alpha decay equation, how does the mass number change?", a: "It decreases by 4.", options: ["It decreases by 2.", "It decreases by 4.", "It increases by 2.", "It stays the same."], f: "An alpha particle carries away 4 nucleons (2 protons and 2 neutrons)." },
+            { q: "What happens to the mass of a star when it reaches the supernova stage?", a: "Most of the material, including heavy elements, is returned to space.", options: ["It disappears.", "It all turns into a black hole.", "Most of the material, including heavy elements, is returned to space.", "It cools down to absolute zero."], f: "Supernovae redistribute heavy elements formed during the star's life back into the universe." },
+            { q: "Why use light gates instead of a stopwatch for fast events?", a: "To eliminate human reaction time errors.", options: ["Because they are cheaper.", "To eliminate human reaction time errors.", "To make the results more random.", "To slow down the experiment."], f: "Electronic timing is significantly more accurate for high-speed measurements." },
+            { q: "Calculate the uncertainty in these weights: 0.036 N, 0.032 N, 0.030 N.", a: "0.003 N", options: ["0.003 N", "0.006 N", "0.033 N", "0.066 N"], f: "Uncertainty is (Max - Min) / 2: (0.036−0.030)/2=0.003." },
+            { q: "Which isotope is best for monitoring the thickness of aluminium foil?", a: "Strontium-90 (Beta emitter, long half-life)", options: ["Americium-241 (Alpha emitter)", "Strontium-90 (Beta emitter, long half-life)", "Cobalt-60 (Gamma emitter)", "Iodine-131 (Short half-life)"], f: "Beta is partially absorbed by aluminium, and a long half-life ensures a constant count rate over time." },
+            { q: "What is the multiplier for 'Mega' (M)?", a: "10⁶", options: ["10³", "10⁶", "10⁹", "10⁻⁶"], f: "Mega represents one million units." },
+            { q: "What is the multiplier for 'micro' (μ)?", a: "10⁻⁶", options: ["10⁻³", "10⁻⁶", "10⁻⁹", "10⁻¹²"], f: "Micro represents one millionth of a unit." },
+            { q: "A hybrid car uses regenerative braking. What is the maximum efficiency of this transfer?", a: "60%", options: ["20%", "40%", "60%", "100%"], f: "Regenerative braking transfers kinetic energy to the battery with a maximum 60% efficiency." },
+            { q: "Why is the U.K. struggling to find a nuclear waste storage site?", a: "High population density in remote areas.", options: ["Lack of granite rock.", "High population density in remote areas.", "Lack of technology.", "Too many volcanoes."], f: "Finding remote areas away from large populations is difficult in a small, densely populated country." },
+            { q: "What is 'carbon dating'?", a: "Using C-14 decay to find the age of once-living things.", options: ["Measuring CO2 in the air.", "Finding the age of rocks using uranium.", "Using C-14 decay to find the age of once-living things.", "A method to reduce carbon emissions."], f: "Carbon-14 is present in living things and decays with a known half-life after death." },
+            { q: "Why is radon gas more common in some parts of the UK than others?", a: "It depends on the type of underlying rock (e.g., granite).", options: ["It depends on the weather.", "It depends on the underlying rock (e.g., granite).", "It depends on the number of power stations.", "It depends on altitude."], f: "Radon levels are determined by the local geology, specifically rocks like granite." },
+            { q: "How can the repeatability of an experiment be improved?", a: "By taking more repeat readings.", options: ["By using a different method.", "By taking more repeat readings.", "By changing the equipment.", "By guessing the anomalies."], f: "Repeats allow for the identification of anomalies and the calculation of a more reliable mean." },
+            { q: "What is the result of 2 half-lives on a source with 800 million nuclei?", a: "200 million", options: ["400 million", "200 million", "100 million", "50 million"], f: "After one half-life 400 remain; after two, 200 remain." },
+            { q: "A 10-carriage train is double the mass of a 5-carriage train. If both use the same emergency deceleration, how do their stopping times compare?", a: "They are the same.", options: ["The 10-carriage train takes double the time.", "The 10-carriage train takes half the time.", "They are the same.", "It depends on the color of the train."], f: "Deceleration is independent of mass if the braking force scales proportionally with mass to maintain the same rate." },
+            { q: "What does 'regenerative braking' do?", a: "Converts kinetic energy into electrical energy for storage.", options: ["Cools the brakes with water.", "Converts kinetic energy into electrical energy for storage.", "Stops the car faster than normal brakes.", "Reduces the mass of the car."], f: "It recovers energy that would otherwise be lost as heat during braking." },
+            { q: "Which planet has the longest 'day' (rotation period)?", a: "Venus", options: ["Earth", "Mars", "Saturn", "Venus"], f: "Venus has a rotation period of 243 Earth days, which is longer than its orbital year." },
+            { q: "What describes a 'galaxy'?", a: "A large collection of stars.", options: ["A star and its planets.", "A large collection of stars.", "The entire observable universe.", "A cloud of gas and dust."], f: "A galaxy contains billions of stars; our solar system is just one part of the Milky Way galaxy." },
+            { q: "How can 'inertial losses' in a car be reduced?", a: "Reducing the mass of the vehicle.", options: ["Streamlining the design.", "Correctly inflating tyres.", "Reducing the mass of the vehicle.", "Using stop-start systems."], f: "Lighter materials reduce the energy required to accelerate the car's mass." }
+        ];
+
+const BOT_TAUNTS = [
+    "I'm more stable than a main sequence star!",
+    "Your brain needs a moderator—it's too fast!",
+    "My circuits are 100% renewable. Are yours?",
+    "I have more potential energy than you!",
+    "Is that your final answer, or just background radiation?",
+    "You're falling for my trap at terminal velocity!",
+    "I'm feeling very alpha today. High ionising power!",
+    "That was less effective than a paper shield!",
+    "You're like Pluto—hardly a threat!",
+    "My logic is as dense as a neutron star!",
+    "Error 404: Skill not found!",
+    "You're radiating a lot of wrong answers!",
+    "Don't split your focus like a U-235 nucleus!"
+];
+
+const MOCK_TAUNTS = [
+    "Charging... slowly...?",
+    "A proton has more energy than you right now!",
+    "System shutdown? How embarrassing.",
+    "I'll give you a moment to reconsider your life choices.",
+    "Your energy levels are lower than absolute zero!",
+    "Zero energy? LOL!"
+];
+
+let state = {
+    mode: '', limit: 0, currentIndex: 0, activeSet: [], results: [], answered: false, selected: null,
+    playerHP: 100, botHP: 100, charge: 0, shielded: false, processingTurn: false
+};
+
+const AudioSys = {
+    ctx: null,
+    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+    play(freq, type, dur, sweep = 0) {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if(sweep) o.frequency.exponentialRampToValueAtTime(sweep, this.ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+    },
+    correct() { this.play(440, 'sine', 0.3, 880); },
+    wrong() { this.play(150, 'sawtooth', 0.4, 60); },
+    atk() { this.play(600, 'square', 0.2, 50); },
+    botAtk() { this.play(200, 'sawtooth', 0.3, 80); },
+    heal() { this.play(300, 'sine', 0.5, 900); },
+    shd() { this.play(200, 'sine', 0.3, 220); },
+    hit() { this.play(80, 'triangle', 0.2, 40); }
+};
+
+function startSession(mode, val) {
+    state.mode = mode; state.currentIndex = 0; state.results = []; state.playerHP = 100; state.botHP = 100; state.charge = 0; state.shielded = false;
+    
+    if(mode === 'standard') { state.limit = 20; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 20); }
+    else if(mode === 'flashcard') { state.limit = QUESTIONS.length; state.activeSet = [...QUESTIONS]; }
+    else if(mode === 'survival') { state.limit = val; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, val); }
+    else { state.limit = QUESTIONS.length; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()); }
+    
+    state.results = new Array(state.limit).fill(null);
+    
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('sidebar-empty').classList.add('hidden');
+    document.getElementById('sidebar-active-content').classList.remove('hidden');
+    document.getElementById('mob-stats').classList.remove('hidden');
+    document.getElementById('quiz-ui').classList.remove('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    
+    const mobSelect = document.getElementById('mob-q-selector');
+    const mobBatteryHud = document.getElementById('mob-battery-hud');
+    
+    if(mode === 'standard' || mode === 'flashcard') {
+        mobSelect.classList.remove('hidden');
+        mobSelect.innerHTML = '';
+        for(let i=0; i<state.limit; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `Q${i+1}`;
+            mobSelect.appendChild(opt);
+        }
+    } else {
+        mobSelect.classList.add('hidden');
+    }
+
+    if(mode === 'battle') {
+        document.getElementById('battle-ui').classList.remove('hidden');
+        document.getElementById('battle-sidebar-stats').classList.remove('hidden');
+        mobBatteryHud.classList.remove('hidden');
+        document.getElementById('prog-label').textContent = "Battle Stage";
+    } else {
+        document.getElementById('prog-label').textContent = "Progress";
+        mobBatteryHud.classList.add('hidden');
+    }
+    
+    buildNav(); updateProg(); renderQ();
+}
+
+function buildNav() {
+    const grid = document.getElementById('nav-grid'); grid.innerHTML = '';
+    const isSelectable = (state.mode === 'standard' || state.mode === 'flashcard');
+    for(let i=0; i<state.limit; i++) {
+        const d = document.createElement('div');
+        d.id = `nav-${i}`; d.className = `nav-dot bg-slate-100 text-slate-400 ${isSelectable ? 'selectable' : ''}`;
+        d.textContent = i + 1;
+        if(isSelectable) d.onclick = () => jumpTo(i);
+        grid.appendChild(d);
+    }
+}
+
+function jumpTo(i) { 
+    state.currentIndex = i; 
+    const mobSel = document.getElementById('mob-q-selector');
+    if(mobSel) mobSel.value = i;
+    updateProg(); 
+    renderQ(); 
+}
+
+function updateProg() {
+    const done = state.results.filter(r => r !== null).length;
+    const pct = (done / state.limit) * 100;
+    
+    document.getElementById('side-current').textContent = done;
+    document.getElementById('side-total').textContent = state.limit;
+    document.getElementById('side-bar').style.width = pct + '%';
+    
+    document.getElementById('mob-prog-text').textContent = `${state.currentIndex+1} / ${state.limit}`;
+    document.getElementById('mob-prog-bar').style.width = ((state.currentIndex+1)/state.limit * 100) + '%';
+    
+    state.results.forEach((r, i) => {
+        const dot = document.getElementById(`nav-${i}`); if(!dot) return;
+        let c = "nav-dot ";
+        if(i === state.currentIndex) c += "ring-2 ring-indigo-500 ";
+        if(r === 'correct') c += "bg-emerald-500 text-white ";
+        else if(r === 'wrong') c += "bg-rose-500 text-white ";
+        else c += "bg-slate-100 text-slate-400 ";
+        dot.className = c + ((state.mode==='standard'||state.mode==='flashcard') ? 'selectable' : '');
+    });
+
+    if(state.mode === 'battle') {
+        document.getElementById('side-charge').textContent = state.charge;
+        document.getElementById('side-charge-bar').style.width = state.charge + '%';
+        document.getElementById('mob-charge-text').textContent = `${state.charge}% NRG`;
+        document.getElementById('mob-charge-bar').style.width = state.charge + '%';
+        document.getElementById('bot-hp-bar').style.width = state.botHP + '%';
+        document.getElementById('player-hp-bar').style.width = state.playerHP + '%';
+        document.getElementById('bot-hp-text').textContent = `Bot: ${Math.max(0, Math.round(state.botHP))}%`;
+        document.getElementById('player-hp-text').textContent = `User: ${Math.max(0, Math.round(state.playerHP))}%`;
+    }
+}
+
+function renderQ() {
+    const q = state.activeSet[state.currentIndex]; state.answered = false; state.selected = null;
+    document.getElementById('q-text').textContent = q.q;
+    document.getElementById('feedback-box').classList.add('hidden');
+    document.getElementById('battle-actions').classList.add('hidden');
+    document.getElementById('main-btn').classList.remove('hidden');
+    document.getElementById('main-btn').textContent = state.mode === 'flashcard' ? "Reveal Answer" : "Check Response";
+    
+    const opts = document.getElementById('options-box'); 
+    opts.innerHTML = '';
+    
+    if(state.mode === 'flashcard') { 
+        opts.classList.add('hidden'); 
+        document.getElementById('flash-box').classList.add('hidden'); 
+    } else {
+        opts.classList.remove('hidden'); 
+        document.getElementById('flash-box').classList.add('hidden');
+        q.options.forEach(o => {
+            const b = document.createElement('button');
+            b.className = "option-btn p-4 rounded-xl border-2 border-slate-100 bg-white text-left text-sm font-medium";
+            b.textContent = o;
+            b.onclick = () => {
+                if(state.answered) return;
+                document.querySelectorAll('.option-btn').forEach(btn => btn.classList.replace('border-indigo-500','border-slate-100'));
+                b.classList.replace('border-slate-100','border-indigo-500'); state.selected = o;
+            };
+            opts.appendChild(b);
+        });
+    }
+}
+
+function handleMainAction() {
+    const q = state.activeSet[state.currentIndex];
+    if(state.mode === 'flashcard') {
+        document.getElementById('flash-box').classList.remove('hidden');
+        document.getElementById('flash-ans').textContent = q.a;
+        document.getElementById('flash-exp').textContent = q.f;
+        document.getElementById('main-btn').classList.add('hidden'); return;
+    }
+    if(!state.selected || state.answered) { if(state.answered) next(); return; }
+    const isCorrect = state.selected === q.a; state.answered = true;
+    state.results[state.currentIndex] = isCorrect ? 'correct' : 'wrong';
+    if(isCorrect) AudioSys.correct(); else AudioSys.wrong();
+    
+    const fb = document.getElementById('feedback-box'); fb.classList.remove('hidden');
+    fb.className = `p-6 rounded-2xl border flex gap-4 ${isCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`;
+    document.getElementById('fb-status').textContent = isCorrect ? "Validated" : "Error";
+    document.getElementById('fb-text').textContent = q.f;
+    document.getElementById('fb-icon').textContent = isCorrect ? "✅" : "❌";
+    
+    document.querySelectorAll('.option-btn').forEach(b => {
+        if(b.textContent === q.a) b.className = "option-btn p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold text-left text-sm";
+        else if(b.textContent === state.selected && !isCorrect) b.className = "option-btn p-4 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold text-left text-sm";
+        else b.classList.add('opacity-40');
+    });
+    
+    if(state.mode === 'survival' && !isCorrect) document.getElementById('main-btn').textContent = "View Results";
+    else if(state.mode === 'battle') { 
+        if(isCorrect) state.charge = Math.min(100, state.charge + 25); 
+        document.getElementById('main-btn').textContent = "Execute Action"; 
+        updateProg(); 
+    }
+    else document.getElementById('main-btn').textContent = "Next Objective";
+}
+
+function flashResult(knew) { state.results[state.currentIndex] = knew ? 'correct' : 'wrong'; if(knew) AudioSys.correct(); else AudioSys.wrong(); next(); }
+
+function next() {
+    if(state.mode === 'battle') {
+        document.getElementById('options-box').classList.add('hidden');
+        document.getElementById('feedback-box').classList.add('hidden');
+        document.getElementById('main-btn').classList.add('hidden');
+        document.getElementById('battle-actions').classList.remove('hidden');
+        
+        const hasEnergy = state.charge >= 10;
+        document.getElementById('atk-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('heal-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('shd-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('wait-btn').classList.toggle('hidden', hasEnergy);
+        
+        document.getElementById('atk-btn').disabled = state.charge < 20;
+        document.getElementById('heal-btn').disabled = state.charge < 15;
+        document.getElementById('shd-btn').disabled = state.charge < 10;
+        return;
+    }
+    if(state.mode === 'survival' && state.results[state.currentIndex] === 'wrong') { showSum(); return; }
+    if(state.currentIndex < state.limit - 1) { jumpTo(state.currentIndex + 1); }
+    else showSum();
+}
+
+function spawnDamage(parent, text, color) {
+    const p = document.createElement('div');
+    p.className = `damage-pop text-xl ${color}`;
+    p.textContent = text;
+    p.style.left = '50%';
+    parent.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+}
+
+function showTaunt(isMocking = false) {
+    const bubble = document.getElementById('bot-speech');
+    const pool = isMocking ? MOCK_TAUNTS : BOT_TAUNTS;
+    bubble.textContent = pool[Math.floor(Math.random() * pool.length)];
+    bubble.classList.remove('hidden');
+    setTimeout(() => bubble.classList.add('hidden'), 2200);
+}
+
+function performCombat(type) {
+    if(state.processingTurn) return;
+    state.processingTurn = true;
+    
+    let isMockingAttack = false;
+
+    if(type === 'attack') { 
+        state.botHP -= 25; state.charge -= 20; AudioSys.atk(); 
+        spawnDamage(document.getElementById('bot-card'), "-25", "text-rose-500");
+    }
+    else if(type === 'heal') { 
+        state.playerHP = Math.min(100, state.playerHP + 30); state.charge -= 15; AudioSys.heal(); 
+        spawnDamage(document.getElementById('player-card'), "+30", "text-emerald-500");
+    }
+    else if(type === 'shield') { 
+        state.shielded = true; state.charge -= 10; AudioSys.shd(); 
+        spawnDamage(document.getElementById('player-card'), "🛡️ ACTIVE", "text-indigo-500");
+    }
+    else if(type === 'wait') {
+        isMockingAttack = true;
+        spawnDamage(document.getElementById('player-card'), "RECHARGING...", "text-slate-400");
+    }
+
+    updateProg();
+    if(state.botHP <= 0) { setTimeout(() => { showSum(); state.processingTurn = false; }, 800); return; }
+
+    setTimeout(() => {
+        showTaunt(isMockingAttack);
+        let dmg = 15;
+        if(state.shielded) { dmg = 3; state.shielded = false; }
+        state.playerHP -= dmg;
+        AudioSys.botAtk();
+        spawnDamage(document.getElementById('player-card'), `-${dmg}`, "text-rose-600");
+        updateProg();
+        
+        setTimeout(() => {
+            state.processingTurn = false;
+            if(state.playerHP <= 0) showSum();
+            else { jumpTo((state.currentIndex + 1) % state.limit); }
+        }, 1200);
+    }, 1000);
+}
+
+function showSum() {
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.remove('hidden');
+    const correct = state.results.filter(r => r === 'correct').length;
+    const total = state.results.filter(r => r !== null).length;
+    document.getElementById('sum-score').textContent = `${correct}/${total}`;
+    
+    if(state.mode === 'survival') {
+        document.getElementById('sum-pct-wrap').classList.add('hidden');
+        document.getElementById('sum-text').textContent = correct === state.limit ? "Perfection! You survived the gauntlet." : "Game Over! You reached stage " + total + ".";
+    } else if(state.mode === 'battle') {
+        document.getElementById('sum-pct-wrap').classList.add('hidden');
+        document.getElementById('sum-text').textContent = state.botHP <= 0 ? "VICTORY! The bot has been decommissioned." : "DEFEAT! Your systems have failed.";
+    } else {
+        document.getElementById('sum-pct-wrap').classList.remove('hidden');
+        const pct = total === 0 ? 0 : Math.round((correct/total)*100);
+        document.getElementById('sum-pct').textContent = pct + '%';
+        document.getElementById('sum-text').textContent = "Great job finishing the protocol.";
+    }
+}
+
+function resetToMenu() { 
+    state.mode = ''; state.currentIndex = 0; state.results = []; state.playerHP = 100; state.botHP = 100; state.charge = 0; state.shielded = false; state.processingTurn = false;
+
+    document.getElementById('menu-screen').classList.remove('hidden');
+    document.getElementById('sidebar-empty').classList.remove('hidden');
+    document.getElementById('sidebar-active-content').classList.add('hidden');
+    document.getElementById('mob-stats').classList.add('hidden');
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    document.getElementById('battle-sidebar-stats').classList.add('hidden');
+    document.getElementById('mob-q-selector').classList.add('hidden');
+    document.getElementById('mob-battery-hud').classList.add('hidden');
+    document.getElementById('prog-label').textContent = "Progress";
+    document.getElementById('side-bar').style.width = '0%';
+}
+</script>
+</body>
+</html>
