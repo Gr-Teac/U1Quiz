@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCSE Unit 2 Physics | Mastery Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+        }
+
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 1024px) {
+            .app-container {
+                grid-template-columns: 320px 1fr;
+            }
+            .sidebar {
+                display: flex !important;
+                border-right: 1px solid #e2e8f0;
+            }
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:active { transform: scale(0.98); }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hp-bar { transition: width 0.4s ease-in-out; }
+
+        .nav-dot {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 800;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .nav-dot.selectable { cursor: pointer; }
+        .nav-dot.selectable:hover { transform: scale(1.1); }
+
+        .damage-pop {
+            animation: popUp 0.8s ease-out forwards;
+            position: absolute;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes popUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-60px); opacity: 0; }
+        }
+
+        /* Responsive Speech Bubble Fix */
+        .speech-bubble {
+            position: absolute;
+            bottom: 105%; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 2px solid #334155;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: bold;
+            width: 85%; 
+            max-width: 200px;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+            z-index: 60;
+            animation: bubbleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            word-wrap: break-word;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+
+        @keyframes bubbleIn {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.5) translateY(10px); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-900 overflow-x-hidden">
+
+    <div class="app-container">
+        <!-- Sidebar (Desktop only) -->
+        <aside class="sidebar hidden flex-col bg-white p-6 sticky top-0 h-screen overflow-y-auto">
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">Physics U2</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">v10.2 Pro</p>
+            </div>
+
+            <div id="sidebar-active-content" class="hidden space-y-6">
+                <!-- Status Indicators -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="prog-label">Progress</p>
+                    <div class="flex items-end gap-2 mb-2">
+                        <span id="side-current" class="text-3xl font-black text-slate-800">0</span>
+                        <span class="text-slate-400 font-bold mb-1">/ <span id="side-total">0</span></span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="side-bar" class="bg-indigo-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Battle Specific Sidebar -->
+                <div id="battle-sidebar-stats" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white">
+                        <p class="text-[10px] font-black text-indigo-400 uppercase mb-2">Battery Charge</p>
+                        <div class="flex items-center gap-3">
+                            <span id="side-charge" class="text-2xl font-black">0</span>
+                            <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="side-charge-bar" class="bg-indigo-400 h-full w-0 transition-all"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigator -->
+                <div id="navigator-section">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" id="nav-label">Question Map</p>
+                    <div id="nav-grid" class="grid grid-cols-6 gap-1.5"></div>
+                </div>
+            </div>
+
+            <div id="sidebar-empty" class="flex-1 flex flex-col items-center justify-center text-center opacity-30">
+                <div class="text-4xl mb-2">🛰️</div>
+                <p class="text-[10px] font-black uppercase tracking-widest">System Idle</p>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-slate-100">
+                <button onclick="resetToMenu()" class="w-full py-3 text-sm font-bold text-slate-400 hover:text-rose-500 transition-colors">Abort Mission</button>
+            </div>
+        </aside>
+
+        <main class="flex flex-col relative h-screen overflow-hidden">
+            <!-- Mobile Navigation Bar -->
+            <nav class="lg:hidden glass sticky top-0 z-50 px-4 py-3 flex justify-between items-center bg-white/90">
+                <div class="flex items-center gap-3">
+                    <span onclick="resetToMenu()" class="font-extrabold text-indigo-600 text-lg cursor-pointer">U2</span>
+                    <!-- Mobile Question Selector Dropdown -->
+                    <select id="mob-q-selector" onchange="jumpTo(parseInt(this.value))" class="hidden text-xs font-bold bg-slate-100 border-none rounded-lg px-2 py-1 outline-none text-slate-600 focus:ring-2 focus:ring-indigo-500">
+                    </select>
+                </div>
+                
+                <div id="mob-stats" class="hidden flex items-center gap-4">
+                    <!-- Mobile Battery HUD (Specific for Battle Mode) -->
+                    <div id="mob-battery-hud" class="hidden flex flex-col items-center justify-center bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100">
+                        <span id="mob-charge-text" class="text-[10px] font-black text-indigo-600 leading-none">0% NRG</span>
+                        <div class="w-12 h-1 bg-indigo-200 rounded-full mt-1 overflow-hidden">
+                            <div id="mob-charge-bar" class="h-full bg-indigo-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+
+                    <div id="mob-prog-hud" class="flex flex-col items-end">
+                        <span id="mob-prog-text" class="text-[10px] font-black text-slate-400 uppercase leading-none">0 / 0</span>
+                        <div class="w-16 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div id="mob-prog-bar" class="h-full bg-indigo-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+                    <button onclick="resetToMenu()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main Scrollable Area -->
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-12">
+                <div class="flex flex-col items-center justify-start p-6 md:p-12">
+                    <div id="content-wrap" class="w-full max-w-2xl relative">
+                        
+                        <!-- MENU -->
+                        <div id="menu-screen" class="fade-in space-y-8 py-6">
+                            <div class="text-center md:text-left">
+                                <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">Select <span class="text-indigo-600">Module.</span></h2>
+                                <p class="text-slate-500 mt-2">Master 70 core objectives through different training protocols.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button onclick="startSession('standard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-indigo-500 transition-all text-left shadow-sm">
+                                    <div class="text-2xl mb-3">🎯</div>
+                                    <h3 class="font-bold text-lg">Standard Quiz</h3>
+                                    <p class="text-xs text-slate-500 mt-1">20 Random objectives from the bank.</p>
+                                </button>
+
+                                <button onclick="startSession('flashcard')" class="group p-6 bg-white border-2 border-slate-100 rounded-3xl hover:border-emerald-500 transition-all text-left shadow-sm">
+                                    <div class="text-2xl mb-3">📇</div>
+                                    <h3 class="font-bold text-lg">Full Flashcards</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Review all 70 questions with hidden logic.</p>
+                                </button>
+
+                                <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-lg flex items-center gap-2">Survival <span class="text-rose-500 text-sm">💀</span></h3>
+                                        <p class="text-slate-400 text-xs mt-1">No errors allowed. High pressure.</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-4">
+                                        <button onclick="startSession('survival', 10)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">10Q</button>
+                                        <button onclick="startSession('survival', 30)" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">30Q</button>
+                                        <button onclick="startSession('survival', 70)" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 rounded-xl text-[10px] font-bold uppercase">Gauntlet</button>
+                                    </div>
+                                </div>
+
+                                <div class="p-6 bg-indigo-600 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-lg flex items-center gap-2">Battle Bot <span class="text-yellow-400 text-sm">🤖</span></h3>
+                                        <p class="text-indigo-200 text-xs mt-1">Turn-based knowledge combat.</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-4">
+                                        <button onclick="startSession('battle', 'easy')" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase">Standard</button>
+                                        <button onclick="startSession('battle', 'hard')" class="flex-1 py-2 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-[10px] font-bold uppercase">Elite</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BATTLE ARENA -->
+                        <div id="battle-ui" class="hidden fade-in space-y-6 mb-8 mt-12 relative">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div id="bot-card" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 text-center relative">
+                                    <div id="bot-speech" class="speech-bubble hidden">Beep Boop!</div>
+                                    <div class="text-3xl mb-2">👾</div>
+                                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-1">
+                                        <div id="bot-hp-bar" class="hp-bar bg-rose-500 h-full w-full"></div>
+                                    </div>
+                                    <p id="bot-hp-text" class="text-[10px] text-slate-400 font-bold uppercase">Bot: 100%</p>
+                                </div>
+                                <div id="player-card" class="bg-white p-5 rounded-2xl border border-slate-200 text-center shadow-sm relative">
+                                    <div class="text-3xl mb-2">🧑‍🚀</div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-1">
+                                        <div id="player-hp-bar" class="hp-bar bg-emerald-500 h-full w-full"></div>
+                                    </div>
+                                    <p id="player-hp-text" class="text-[10px] text-slate-500 font-bold uppercase">User: 100%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUIZ CONTENT -->
+                        <div id="quiz-ui" class="hidden fade-in space-y-8 pt-4">
+                            <div id="q-header" class="space-y-3">
+                                <span id="q-tag" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-black uppercase tracking-widest border border-indigo-100">Physics Core</span>
+                                <h2 id="q-text" class="text-2xl font-extrabold text-slate-900 leading-tight"></h2>
+                            </div>
+                            <div id="options-box" class="grid grid-cols-1 gap-3"></div>
+                            
+                            <!-- Battle Combat Menu -->
+                            <div id="battle-actions" class="hidden grid grid-cols-3 gap-3">
+                                <button onclick="performCombat('attack')" id="atk-btn" class="flex flex-col items-center p-4 bg-rose-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">💥</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Attack</span>
+                                    <span class="text-[8px] font-bold opacity-80">(20 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('heal')" id="heal-btn" class="flex flex-col items-center p-4 bg-emerald-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">🧪</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Heal</span>
+                                    <span class="text-[8px] font-bold opacity-80">(15 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('shield')" id="shd-btn" class="flex flex-col items-center p-4 bg-indigo-500 rounded-2xl text-white shadow-lg disabled:opacity-20 transition-all">
+                                    <span class="text-xl">🛡️</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Shield</span>
+                                    <span class="text-[8px] font-bold opacity-80">(10 NRG)</span>
+                                </button>
+                                <button onclick="performCombat('wait')" id="wait-btn" class="hidden col-span-3 flex flex-col items-center p-4 bg-slate-400 rounded-2xl text-white shadow-lg transition-all">
+                                    <span class="text-xl">💤</span>
+                                    <span class="text-[9px] font-black uppercase mt-1">Out of Energy: Wait / Recharge</span>
+                                    <span class="text-[8px] font-bold opacity-80">(Next Question)</span>
+                                </button>
+                            </div>
+
+                            <!-- Flashcard Logic -->
+                            <div id="flash-box" class="hidden space-y-6">
+                                <div class="p-8 bg-indigo-600 rounded-3xl text-white shadow-xl">
+                                    <p id="flash-ans" class="text-xl font-bold"></p>
+                                    <p id="flash-exp" class="mt-4 pt-4 border-t border-white/10 text-indigo-200 text-sm italic"></p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button onclick="flashResult(false)" class="p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-400">Needs Review</button>
+                                    <button onclick="flashResult(true)" class="p-4 bg-emerald-500 rounded-xl font-bold text-white shadow-lg">Nailed It</button>
+                                </div>
+                            </div>
+
+                            <div id="feedback-box" class="hidden p-6 rounded-2xl border flex gap-4 fade-in">
+                                <div id="fb-icon" class="text-2xl"></div>
+                                <div>
+                                    <p id="fb-status" class="font-black text-[10px] uppercase mb-1"></p>
+                                    <p id="fb-text" class="text-sm text-slate-600"></p>
+                                </div>
+                            </div>
+                            <button id="main-btn" onclick="handleMainAction()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase shadow-xl hover:bg-indigo-600 transition-colors">Check Response</button>
+                        </div>
+
+                        <!-- SUMMARY -->
+                        <div id="summary-ui" class="hidden fade-in text-center py-10">
+                            <div id="sum-icon" class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">🏆</div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Protocol Complete</h2>
+                            <p id="sum-text" class="text-slate-500 mb-8"></p>
+                            <div class="grid grid-cols-1 gap-4 mb-8 max-w-sm mx-auto">
+                                <div class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Final Score</p><p id="sum-score" class="text-2xl font-black text-indigo-600">0/0</p></div>
+                                <div id="sum-pct-wrap" class="p-5 bg-white rounded-2xl border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Accuracy</p><p id="sum-pct" class="text-2xl font-black text-indigo-600">0%</p></div>
+                            </div>
+                            <button onclick="resetToMenu()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase">Return to Main Menu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+const QUESTIONS = [
+    { q: "What does the gradient of a distance-time graph represent?", a: "Speed", options: ["Acceleration", "Speed", "Distance", "Force"], f: `The gradient of a distance-time graph represents the speed of the object. A steeper line indicates a higher speed.` },
+    { q: "What does the area under a velocity-time graph represent?", a: "Distance travelled", options: ["Acceleration", "Mean speed", "Distance travelled", "Resultant force"], f: `The distance travelled is found by calculating the area under a velocity-time graph. For a triangle, this is half × base × height.` },
+    { q: "What does the gradient of a velocity-time graph represent?", a: "Acceleration", options: ["Speed", "Work done", "Resultant force", "Acceleration"], f: `The gradient of a velocity-time graph represents the acceleration or deceleration of the object. A constant gradient indicates constant acceleration.` },
+    { q: "Define 'inertia' in the context of a motor car.", a: "A resistance to a change in motion.", options: ["The total mass of the car.", "A resistance to a change in motion.", "The force required to stop the car.", "The momentum of the vehicle."], f: `Inertia is a measure of an object's resistance to a change in its state of rest or motion. Mass is an expression of this inertia.` },
+    { q: "State Newton’s first law for a moving object.", a: "It will continue at a constant velocity unless a resultant force acts.", options: ["It will eventually come to rest due to friction.", "It will continue at a constant velocity unless a resultant force acts.", "It will accelerate in the direction of the largest force.", "It exerts an equal and opposite force on its surroundings."], f: `Objects stay at rest or move at a constant speed in a straight line unless an unbalanced (resultant) force acts. Failing to specify a 'straight line' or 'uniform motion' is a common error.` },
+    { q: "Which equation represents Newton’s second law of motion?", a: "F = ma", options: ["W = mg", "F = kx", "F = ma", "p = mv"], f: `Newton’s second law states that resultant force equals mass multiplied by acceleration. It is important to substitute values before rearranging to secure marks.` },
+    { q: "What is the difference between mass and weight?", a: "Mass is the amount of matter; weight is the force of gravity.", options: ["Mass is measured in Newtons; weight is in kilograms.", "Mass changes with location; weight remains constant.", "Mass is the amount of matter; weight is the force of gravity.", "They are the same physical quantity."], f: `Mass is measured in kilograms (kg) and weight in Newtons (N). On Earth, a 1 kg mass has a weight of approximately 10 N.` },
+    { q: "State Newton’s third law of motion.", a: "If body A exerts a force on B, B exerts an equal and opposite force on A.", options: ["Force equals mass times acceleration.", "Every action has an equal and opposite reaction.", "If body A exerts a force on B, B exerts an equal and opposite force on A.", "An object at rest stays at rest."], f: `Newton's third law requires two bodies and equal but opposite forces. Describing forces as just 'equal' instead of 'equal and opposite' is a frequent mistake.` },
+    { q: "What is 'thinking distance'?", a: "The distance travelled during the driver's reaction time.", options: ["The distance travelled while the brakes are applied.", "The total distance taken to stop.", "The distance travelled during the driver's reaction time.", "The distance required to see a hazard."], f: `Thinking distance is the distance covered from seeing a hazard to applying the brakes. It increases with speed and factors like tiredness or drugs.` },
+    { q: "Which factor increases braking distance but NOT thinking distance?", a: "Icy roads", options: ["Tiredness", "Alcohol", "Icy roads", "High speed"], f: `Icy roads, worn brakes, or worn tyres affect the car's ability to stop once the brakes are applied. Speed increases both thinking and braking distances.` },
+    { q: "How do you calculate 'overall stopping distance'?", a: "Thinking distance + braking distance", options: ["Thinking distance × braking distance", "Thinking distance + braking distance", "Braking distance – thinking distance", "Thinking distance + reaction time"], f: `Overall stopping distance is the sum of the distance travelled during reaction time and the distance travelled while braking.` },
+    { q: "Describe the forces on an object falling at terminal speed.", a: "Air resistance is equal and opposite to weight.", options: ["Gravity is the only force acting.", "Air resistance is greater than weight.", "Air resistance is equal and opposite to weight.", "The resultant force is at its maximum."], f: `At terminal speed, the downward weight is balanced by the upward air resistance, resulting in zero acceleration. Referring to the downward force as 'gravity' instead of 'weight' is often penalised.` },
+    { q: "Define 'work done'.", a: "Energy transferred by a force.", options: ["The speed of an object.", "Energy transferred by a force.", "The rate of doing work.", "The total power of a system."], f: `Work done is a measure of energy transfer. It is calculated as force multiplied by the distance moved in the direction of the force.` },
+    { q: "What is the formula for Kinetic Energy (KE)?", a: "KE = ½mv²", options: ["KE = mgh", "KE = ½mv²", "KE = Fd", "KE = ½Fx"], f: `Kinetic energy depends on the mass and the square of the velocity. Forgetting to square the velocity is a common calculation error.` },
+    { q: "Define 'potential energy' (PE).", a: "Energy possessed by an object due to its position.", options: ["Energy possessed by an object due to its motion.", "Energy stored in a stretched spring.", "Energy possessed by an object due to its position.", "The total energy in a system."], f: `Potential energy (specifically gravitational) depends on mass, gravitational field strength, and change in height. Work done lifting an object equals its gain in PE.` },
+    { q: "What does the area under a force-extension graph represent?", a: "Work done in stretching the spring.", options: ["The spring constant.", "The maximum load.", "Work done in stretching the spring.", "The acceleration of the spring."], f: `The area under a linear force-extension graph represents the energy stored (work done) and is calculated as ½Fx.` },
+    { q: "What is Hooke's Law?", a: "Extension is directly proportional to the force applied.", options: ["Force equals mass times acceleration.", "Extension is directly proportional to the force applied.", "Energy is conserved in a spring.", "The spring constant is always 10 N/m."], f: `Hooke's Law holds as long as the elastic limit is not exceeded. A straight line through the origin on a force-extension graph proves this relationship.` },
+    { q: "How is the spring constant (k) calculated?", a: "Force ÷ extension", options: ["Force × extension", "Work ÷ force", "Force ÷ extension", "Mass × gravity"], f: `The spring constant (k) is the force required per unit of extension. Units are typically N/m or N/mm.` },
+    { q: "How do crumple zones improve driver safety?", a: "They increase the stopping distance, reducing the force.", options: ["They decrease the stopping time.", "They increase the stopping distance, reducing the force.", "They prevent the car from bouncing.", "They absorb all the kinetic energy."], f: `By increasing the distance or time over which the car stops, the resultant force on the occupants is reduced. Calculations can be based on work done (W=Fd).` },
+    { q: "How can 'aerodynamic losses' in a car be reduced?", a: "By using more streamlined designs.", options: ["By using stop-start systems.", "By using lighter materials.", "By using more streamlined designs.", "By inflating tyres correctly."], f: `Streamlining reduces air resistance.` },
+    { q: "What reduces 'rolling resistance' in a vehicle?", a: "Correctly inflated tyres.", options: ["Lighter car mass.", "Correctly inflated tyres.", "Stop-start buttons.", "Streamlined shape."], f: `Correctly inflated tyres and materials that do not heat up when distorted reduce rolling resistance.` },
+    { q: "What is the purpose of 'stop-start' systems in cars?", a: "To reduce idling losses.", options: ["To reduce inertial losses.", "To reduce rolling resistance.", "To reduce idling losses.", "To improve regenerative braking."], f: `Stop-start systems turn off the engine when the car is stationary to save fuel.` },
+    { q: "Define 'inertial losses' in a vehicle.", a: "Energy used to accelerate the mass of the car.", options: ["Energy lost to air resistance.", "Energy used to accelerate the mass of the car.", "Energy lost while the engine is idling.", "Energy lost through the tyres."], f: `Inertial losses are reduced by using low-mass materials to build lighter cars.` },
+    { q: "How do you calculate 'uncertainty' in a set of readings?", a: "(Maximum value – minimum value) ÷ 2", options: ["Mean value ÷ 2", "Maximum value – mean value", "(Maximum value – minimum value) ÷ 2", "Standard deviation"], f: `Uncertainty is half the range of the repeated measurements.` },
+    { q: "When is data considered 'repeatable' according to the 10% rule?", a: "When percentage uncertainty is less than 10%.", options: ["When there are no anomalies.", "When percentage uncertainty is less than 10%.", "When three repeats are taken.", "When the mean is a whole number."], f: `If the percentage uncertainty in the mean is under 10%, the data is generally deemed repeatable.` },
+    { q: "What is the order of planets from the Sun?", a: "Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.", options: ["Mercury, Mars, Earth, Venus, Jupiter, Saturn, Uranus, Neptune.", "Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.", "Venus, Mercury, Earth, Mars, Saturn, Jupiter, Neptune, Uranus.", "Mars, Venus, Earth, Mercury, Jupiter, Saturn, Uranus, Neptune."], f: `Candidates must recall the correct order of the eight planets.` },
+    { q: "Which planets are 'terrestrial' (rocky)?", a: "The inner four planets.", options: ["The outer four planets.", "The inner four planets.", "Only Earth and Mars.", "Jupiter and Saturn."], f: `The inner planets are rocky, while the outer planets are gaseous giants.` },
+    { q: "Where is the asteroid belt located?", a: "Between Mars and Jupiter.", options: ["Between Earth and Mars.", "Between Mars and Jupiter.", "Beyond Neptune.", "Between Jupiter and Saturn."], f: `The asteroid belt contains many rocky asteroids and dwarf planets between the rocky and gas planets.` },
+    { q: "Define an 'Astronomical Unit' (AU).", a: "The mean distance between the Earth and the Sun.", options: ["The distance light travels in one year.", "The time it takes Earth to orbit the Sun.", "The mean distance between the Earth and the Sun.", "The diameter of the Solar System."], f: `1 AU is approx 150 million km.` }
+];
+
+const BOT_TAUNTS = [
+    "I'm more stable than a main sequence star!",
+    "Your brain needs a moderator—it's too fast!",
+    "My circuits are 100% renewable. Are yours?",
+    "I have more potential energy than you!",
+    "Is that your final answer, or just background radiation?",
+    "You're falling for my trap at terminal velocity!",
+    "I'm feeling very alpha today. High ionising power!",
+    "That was less effective than a paper shield!",
+    "You're like Pluto—hardly a threat!",
+    "My logic is as dense as a neutron star!",
+    "Error 404: Skill not found!",
+    "You're radiating a lot of wrong answers!",
+    "Don't split your focus like a U-235 nucleus!"
+];
+
+const MOCK_TAUNTS = [
+    "Charging... slowly...?",
+    "A proton has more energy than you right now!",
+    "System shutdown? How embarrassing.",
+    "I'll give you a moment to reconsider your life choices.",
+    "Your energy levels are lower than absolute zero!",
+    "Zero energy? LOL!"
+];
+
+let state = {
+    mode: '', limit: 0, currentIndex: 0, activeSet: [], results: [], answered: false, selected: null,
+    playerHP: 100, botHP: 100, charge: 0, shielded: false, processingTurn: false
+};
+
+const AudioSys = {
+    ctx: null,
+    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+    play(freq, type, dur, sweep = 0) {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if(sweep) o.frequency.exponentialRampToValueAtTime(sweep, this.ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+    },
+    correct() { this.play(440, 'sine', 0.3, 880); },
+    wrong() { this.play(150, 'sawtooth', 0.4, 60); },
+    atk() { this.play(600, 'square', 0.2, 50); },
+    botAtk() { this.play(200, 'sawtooth', 0.3, 80); },
+    heal() { this.play(300, 'sine', 0.5, 900); },
+    shd() { this.play(200, 'sine', 0.3, 220); },
+    hit() { this.play(80, 'triangle', 0.2, 40); }
+};
+
+function startSession(mode, val) {
+    state.mode = mode; state.currentIndex = 0; state.results = []; state.playerHP = 100; state.botHP = 100; state.charge = 0; state.shielded = false;
+    
+    if(mode === 'standard') { state.limit = 20; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 20); }
+    else if(mode === 'flashcard') { state.limit = QUESTIONS.length; state.activeSet = [...QUESTIONS]; }
+    else if(mode === 'survival') { state.limit = val; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, val); }
+    else { state.limit = QUESTIONS.length; state.activeSet = [...QUESTIONS].sort(() => 0.5 - Math.random()); }
+    
+    state.results = new Array(state.limit).fill(null);
+    
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('sidebar-empty').classList.add('hidden');
+    document.getElementById('sidebar-active-content').classList.remove('hidden');
+    document.getElementById('mob-stats').classList.remove('hidden');
+    document.getElementById('quiz-ui').classList.remove('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    
+    const mobSelect = document.getElementById('mob-q-selector');
+    const mobBatteryHud = document.getElementById('mob-battery-hud');
+    
+    if(mode === 'standard' || mode === 'flashcard') {
+        mobSelect.classList.remove('hidden');
+        mobSelect.innerHTML = '';
+        for(let i=0; i<state.limit; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `Q${i+1}`;
+            mobSelect.appendChild(opt);
+        }
+    } else {
+        mobSelect.classList.add('hidden');
+    }
+
+    if(mode === 'battle') {
+        document.getElementById('battle-ui').classList.remove('hidden');
+        document.getElementById('battle-sidebar-stats').classList.remove('hidden');
+        mobBatteryHud.classList.remove('hidden');
+        document.getElementById('prog-label').textContent = "Battle Stage";
+    } else {
+        document.getElementById('prog-label').textContent = "Progress";
+        mobBatteryHud.classList.add('hidden');
+    }
+    
+    buildNav(); updateProg(); renderQ();
+}
+
+function buildNav() {
+    const grid = document.getElementById('nav-grid'); grid.innerHTML = '';
+    const isSelectable = (state.mode === 'standard' || state.mode === 'flashcard');
+    for(let i=0; i<state.limit; i++) {
+        const d = document.createElement('div');
+        d.id = `nav-${i}`; d.className = `nav-dot bg-slate-100 text-slate-400 ${isSelectable ? 'selectable' : ''}`;
+        d.textContent = i + 1;
+        if(isSelectable) d.onclick = () => jumpTo(i);
+        grid.appendChild(d);
+    }
+}
+
+function jumpTo(i) { 
+    state.currentIndex = i; 
+    const mobSel = document.getElementById('mob-q-selector');
+    if(mobSel) mobSel.value = i;
+    updateProg(); 
+    renderQ(); 
+}
+
+function updateProg() {
+    const done = state.results.filter(r => r !== null).length;
+    const pct = (done / state.limit) * 100;
+    
+    document.getElementById('side-current').textContent = done;
+    document.getElementById('side-total').textContent = state.limit;
+    document.getElementById('side-bar').style.width = pct + '%';
+    
+    document.getElementById('mob-prog-text').textContent = `${state.currentIndex+1} / ${state.limit}`;
+    document.getElementById('mob-prog-bar').style.width = ((state.currentIndex+1)/state.limit * 100) + '%';
+    
+    state.results.forEach((r, i) => {
+        const dot = document.getElementById(`nav-${i}`); if(!dot) return;
+        let c = "nav-dot ";
+        if(i === state.currentIndex) c += "ring-2 ring-indigo-500 ";
+        if(r === 'correct') c += "bg-emerald-500 text-white ";
+        else if(r === 'wrong') c += "bg-rose-500 text-white ";
+        else c += "bg-slate-100 text-slate-400 ";
+        dot.className = c + ((state.mode==='standard'||state.mode==='flashcard') ? 'selectable' : '');
+    });
+
+    if(state.mode === 'battle') {
+        document.getElementById('side-charge').textContent = state.charge;
+        document.getElementById('side-charge-bar').style.width = state.charge + '%';
+        document.getElementById('mob-charge-text').textContent = `${state.charge}% NRG`;
+        document.getElementById('mob-charge-bar').style.width = state.charge + '%';
+        document.getElementById('bot-hp-bar').style.width = state.botHP + '%';
+        document.getElementById('player-hp-bar').style.width = state.playerHP + '%';
+        document.getElementById('bot-hp-text').textContent = `Bot: ${Math.max(0, Math.round(state.botHP))}%`;
+        document.getElementById('player-hp-text').textContent = `User: ${Math.max(0, Math.round(state.playerHP))}%`;
+    }
+}
+
+function renderQ() {
+    const q = state.activeSet[state.currentIndex]; state.answered = false; state.selected = null;
+    document.getElementById('q-text').textContent = q.q;
+    document.getElementById('feedback-box').classList.add('hidden');
+    document.getElementById('battle-actions').classList.add('hidden');
+    document.getElementById('main-btn').classList.remove('hidden');
+    document.getElementById('main-btn').textContent = state.mode === 'flashcard' ? "Reveal Answer" : "Check Response";
+    
+    const opts = document.getElementById('options-box'); 
+    opts.innerHTML = '';
+    
+    if(state.mode === 'flashcard') { 
+        opts.classList.add('hidden'); 
+        document.getElementById('flash-box').classList.add('hidden'); 
+    } else {
+        opts.classList.remove('hidden'); 
+        document.getElementById('flash-box').classList.add('hidden');
+        q.options.forEach(o => {
+            const b = document.createElement('button');
+            b.className = "option-btn p-4 rounded-xl border-2 border-slate-100 bg-white text-left text-sm font-medium";
+            b.textContent = o;
+            b.onclick = () => {
+                if(state.answered) return;
+                document.querySelectorAll('.option-btn').forEach(btn => btn.classList.replace('border-indigo-500','border-slate-100'));
+                b.classList.replace('border-slate-100','border-indigo-500'); state.selected = o;
+            };
+            opts.appendChild(b);
+        });
+    }
+}
+
+function handleMainAction() {
+    const q = state.activeSet[state.currentIndex];
+    if(state.mode === 'flashcard') {
+        document.getElementById('flash-box').classList.remove('hidden');
+        document.getElementById('flash-ans').textContent = q.a;
+        document.getElementById('flash-exp').textContent = q.f;
+        document.getElementById('main-btn').classList.add('hidden'); return;
+    }
+    if(!state.selected || state.answered) { if(state.answered) next(); return; }
+    const isCorrect = state.selected === q.a; state.answered = true;
+    state.results[state.currentIndex] = isCorrect ? 'correct' : 'wrong';
+    if(isCorrect) AudioSys.correct(); else AudioSys.wrong();
+    
+    const fb = document.getElementById('feedback-box'); fb.classList.remove('hidden');
+    fb.className = `p-6 rounded-2xl border flex gap-4 ${isCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`;
+    document.getElementById('fb-status').textContent = isCorrect ? "Validated" : "Error";
+    document.getElementById('fb-text').textContent = q.f;
+    document.getElementById('fb-icon').textContent = isCorrect ? "✅" : "❌";
+    
+    document.querySelectorAll('.option-btn').forEach(b => {
+        if(b.textContent === q.a) b.className = "option-btn p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold text-left text-sm";
+        else if(b.textContent === state.selected && !isCorrect) b.className = "option-btn p-4 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold text-left text-sm";
+        else b.classList.add('opacity-40');
+    });
+    
+    if(state.mode === 'survival' && !isCorrect) document.getElementById('main-btn').textContent = "View Results";
+    else if(state.mode === 'battle') { 
+        if(isCorrect) state.charge = Math.min(100, state.charge + 25); 
+        document.getElementById('main-btn').textContent = "Execute Action"; 
+        updateProg(); 
+    }
+    else document.getElementById('main-btn').textContent = "Next Objective";
+}
+
+function flashResult(knew) { state.results[state.currentIndex] = knew ? 'correct' : 'wrong'; if(knew) AudioSys.correct(); else AudioSys.wrong(); next(); }
+
+function next() {
+    if(state.mode === 'battle') {
+        document.getElementById('options-box').classList.add('hidden');
+        document.getElementById('feedback-box').classList.add('hidden');
+        document.getElementById('main-btn').classList.add('hidden');
+        document.getElementById('battle-actions').classList.remove('hidden');
+        
+        const hasEnergy = state.charge >= 10;
+        document.getElementById('atk-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('heal-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('shd-btn').style.display = hasEnergy ? 'flex' : 'none';
+        document.getElementById('wait-btn').classList.toggle('hidden', hasEnergy);
+        
+        document.getElementById('atk-btn').disabled = state.charge < 20;
+        document.getElementById('heal-btn').disabled = state.charge < 15;
+        document.getElementById('shd-btn').disabled = state.charge < 10;
+        return;
+    }
+    if(state.mode === 'survival' && state.results[state.currentIndex] === 'wrong') { showSum(); return; }
+    if(state.currentIndex < state.limit - 1) { jumpTo(state.currentIndex + 1); }
+    else showSum();
+}
+
+function spawnDamage(parent, text, color) {
+    const p = document.createElement('div');
+    p.className = `damage-pop text-xl ${color}`;
+    p.textContent = text;
+    p.style.left = '50%';
+    parent.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+}
+
+function showTaunt(isMocking = false) {
+    const bubble = document.getElementById('bot-speech');
+    const pool = isMocking ? MOCK_TAUNTS : BOT_TAUNTS;
+    bubble.textContent = pool[Math.floor(Math.random() * pool.length)];
+    bubble.classList.remove('hidden');
+    setTimeout(() => bubble.classList.add('hidden'), 2200);
+}
+
+function performCombat(type) {
+    if(state.processingTurn) return;
+    state.processingTurn = true;
+    
+    let isMockingAttack = false;
+
+    if(type === 'attack') { 
+        state.botHP -= 25; state.charge -= 20; AudioSys.atk(); 
+        spawnDamage(document.getElementById('bot-card'), "-25", "text-rose-500");
+    }
+    else if(type === 'heal') { 
+        state.playerHP = Math.min(100, state.playerHP + 30); state.charge -= 15; AudioSys.heal(); 
+        spawnDamage(document.getElementById('player-card'), "+30", "text-emerald-500");
+    }
+    else if(type === 'shield') { 
+        state.shielded = true; state.charge -= 10; AudioSys.shd(); 
+        spawnDamage(document.getElementById('player-card'), "🛡️ ACTIVE", "text-indigo-500");
+    }
+    else if(type === 'wait') {
+        isMockingAttack = true;
+        spawnDamage(document.getElementById('player-card'), "RECHARGING...", "text-slate-400");
+    }
+
+    updateProg();
+    if(state.botHP <= 0) { setTimeout(() => { showSum(); state.processingTurn = false; }, 800); return; }
+
+    setTimeout(() => {
+        showTaunt(isMockingAttack);
+        let dmg = 15;
+        if(state.shielded) { dmg = 3; state.shielded = false; }
+        state.playerHP -= dmg;
+        AudioSys.botAtk();
+        spawnDamage(document.getElementById('player-card'), `-${dmg}`, "text-rose-600");
+        updateProg();
+        
+        setTimeout(() => {
+            state.processingTurn = false;
+            if(state.playerHP <= 0) showSum();
+            else { jumpTo((state.currentIndex + 1) % state.limit); }
+        }, 1200);
+    }, 1000);
+}
+
+function showSum() {
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.remove('hidden');
+    const correct = state.results.filter(r => r === 'correct').length;
+    const total = state.results.filter(r => r !== null).length;
+    document.getElementById('sum-score').textContent = `${correct}/${total}`;
+    
+    if(state.mode === 'survival') {
+        document.getElementById('sum-pct-wrap').classList.add('hidden');
+        document.getElementById('sum-text').textContent = correct === state.limit ? "Perfection! You survived the gauntlet." : "Game Over! You reached stage " + total + ".";
+    } else if(state.mode === 'battle') {
+        document.getElementById('sum-pct-wrap').classList.add('hidden');
+        document.getElementById('sum-text').textContent = state.botHP <= 0 ? "VICTORY! The bot has been decommissioned." : "DEFEAT! Your systems have failed.";
+    } else {
+        document.getElementById('sum-pct-wrap').classList.remove('hidden');
+        const pct = total === 0 ? 0 : Math.round((correct/total)*100);
+        document.getElementById('sum-pct').textContent = pct + '%';
+        document.getElementById('sum-text').textContent = "Great job finishing the protocol.";
+    }
+}
+
+function resetToMenu() { 
+    state.mode = ''; state.currentIndex = 0; state.results = []; state.playerHP = 100; state.botHP = 100; state.charge = 0; state.shielded = false; state.processingTurn = false;
+
+    document.getElementById('menu-screen').classList.remove('hidden');
+    document.getElementById('sidebar-empty').classList.remove('hidden');
+    document.getElementById('sidebar-active-content').classList.add('hidden');
+    document.getElementById('mob-stats').classList.add('hidden');
+    document.getElementById('quiz-ui').classList.add('hidden');
+    document.getElementById('battle-ui').classList.add('hidden');
+    document.getElementById('summary-ui').classList.add('hidden');
+    document.getElementById('battle-sidebar-stats').classList.add('hidden');
+    document.getElementById('mob-q-selector').classList.add('hidden');
+    document.getElementById('mob-battery-hud').classList.add('hidden');
+    document.getElementById('prog-label').textContent = "Progress";
+    document.getElementById('side-bar').style.width = '0%';
+}
+</script>
+</body>
+</html>
