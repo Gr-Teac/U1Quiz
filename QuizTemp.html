@@ -53,7 +53,7 @@
             </h1>
             <nav id="nav-buttons" class="flex space-x-2">
                 <button onclick="showView('creator')" class="px-4 py-2 rounded-lg bg-white border border-slate-200 shadow-sm hover:bg-slate-50 transition-all font-medium">Question Bank</button>
-                <button onclick="showView('home')" class="px-4 py-2 rounded-lg bg-blue-600 text-white shadow-md hover:bg-blue-700 transition-all font-medium">Play Quiz</button>
+                <button onclick="showView('home')" class="px-4 py-2 rounded-lg bg-blue-600 text-white shadow-md hover:bg-blue-700 transition-all font-medium">Main Menu</button>
             </nav>
         </header>
 
@@ -250,14 +250,18 @@
         };
 
         function showView(viewName) {
+            // Stop timer if leaving quiz
+            if (viewName !== 'quiz' && currentQuiz.timer) {
+                clearInterval(currentQuiz.timer);
+            }
+
             ['creator', 'home', 'quiz', 'results'].forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 if(el) el.classList.add('hidden');
             });
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
-            const nav = document.getElementById('nav-buttons');
-            if (viewName === 'quiz') nav.classList.add('invisible');
-            else nav.classList.remove('invisible');
+            
+            // Note: nav-buttons visibility logic removed so "Main Menu" remains selectable
             if (viewName === 'creator') renderBank();
         }
 
@@ -501,7 +505,7 @@
         }
 
         function endQuiz() {
-            clearInterval(currentQuiz.timer);
+            if (currentQuiz.timer) clearInterval(currentQuiz.timer);
             showView('results');
             const total = currentQuiz.mode === 'practice' ? currentQuiz.activeQuestions.length : currentQuiz.currentIndex;
             const accuracy = total === 0 ? 0 : Math.round((currentQuiz.score / total) * 100);
