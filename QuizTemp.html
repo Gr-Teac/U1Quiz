@@ -205,14 +205,16 @@
             <div id="result-emoji" class="text-7xl mb-6">🎉</div>
             <h2 class="text-4xl font-bold mb-2">Quiz Complete!</h2>
             <p id="result-summary" class="text-xl text-slate-500 mb-8"></p>
-            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-10">
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-10">
                 <div class="bg-blue-50 p-4 rounded-2xl">
-                    <p class="text-sm text-blue-600 font-bold uppercase tracking-wider">Correct</p>
-                    <p id="final-correct" class="text-3xl font-bold">0</p>
+                    <p class="text-sm text-blue-600 font-bold uppercase tracking-wider">Results</p>
+                    <p class="text-3xl font-bold"><span id="final-correct">0</span>/<span id="final-attempted">0</span></p>
+                    <p class="text-xs text-blue-400 font-medium">Correct / Attempted</p>
                 </div>
                 <div class="bg-slate-50 p-4 rounded-2xl">
                     <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">Accuracy</p>
                     <p id="final-accuracy" class="text-3xl font-bold">0%</p>
+                    <p class="text-xs text-slate-400 font-medium">Success Rate</p>
                 </div>
             </div>
             <button onclick="showView('home')" class="px-10 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl transition-all">Back to Menu</button>
@@ -244,13 +246,14 @@
             activeQuestions: [],
             currentIndex: 0,
             score: 0,
+            attempted: 0,
             timer: null,
             timeLeft: 60,
             isAnswering: true
         };
 
         function showView(viewName) {
-            // Stop timer if leaving quiz
+            // Stop timer if leaving quiz view
             if (viewName !== 'quiz' && currentQuiz.timer) {
                 clearInterval(currentQuiz.timer);
             }
@@ -261,7 +264,6 @@
             });
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
             
-            // Note: nav-buttons visibility logic removed so "Main Menu" remains selectable
             if (viewName === 'creator') renderBank();
         }
 
@@ -394,6 +396,7 @@
             currentQuiz.mode = mode;
             currentQuiz.currentIndex = 0;
             currentQuiz.score = 0;
+            currentQuiz.attempted = 0;
             currentQuiz.isAnswering = true;
             let shuffled = [...questions].sort(() => 0.5 - Math.random());
             if (mode === 'practice') {
@@ -454,6 +457,7 @@
         function handleAnswer(selected) {
             if (!currentQuiz.isAnswering) return;
             currentQuiz.isAnswering = false;
+            currentQuiz.attempted++; // Count every answer selection as an attempt
             const q = currentQuiz.activeQuestions[currentQuiz.currentIndex];
             const isCorrect = selected === q.correct;
             const feedbackBox = document.getElementById('feedback-box');
@@ -494,6 +498,7 @@
             currentQuiz.currentIndex++;
             if (currentQuiz.mode === 'practice' && currentQuiz.currentIndex >= currentQuiz.activeQuestions.length) endQuiz();
             else if (currentQuiz.mode === 'madness' && currentQuiz.currentIndex >= currentQuiz.activeQuestions.length) {
+                // If out of questions in madness mode, reshuffle and continue
                 currentQuiz.activeQuestions = [...questions].sort(() => 0.5 - Math.random());
                 currentQuiz.currentIndex = 0;
                 loadQuestion();
@@ -507,10 +512,15 @@
         function endQuiz() {
             if (currentQuiz.timer) clearInterval(currentQuiz.timer);
             showView('results');
-            const total = currentQuiz.mode === 'practice' ? currentQuiz.activeQuestions.length : currentQuiz.currentIndex;
-            const accuracy = total === 0 ? 0 : Math.round((currentQuiz.score / total) * 100);
+            
+            // Accuracy logic: Correct / total attempted questions
+            const totalAttempted = currentQuiz.attempted;
+            const accuracy = totalAttempted === 0 ? 0 : Math.round((currentQuiz.score / totalAttempted) * 100);
+            
             document.getElementById('final-correct').innerText = currentQuiz.score;
+            document.getElementById('final-attempted').innerText = totalAttempted;
             document.getElementById('final-accuracy').innerText = `${accuracy}%`;
+            
             let emoji = "🎉"; let msg = "Amazing performance!";
             if (accuracy < 50) { emoji = "📚"; msg = "Keep practicing!"; }
             else if (accuracy < 80) { emoji = "👍"; msg = "Good effort!"; }
